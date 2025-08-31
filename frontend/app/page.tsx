@@ -6,7 +6,14 @@ import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { ThemeToggle } from '@/components/theme-toggle'
-import { MessageCircle, Globe, GraduationCap, Lightbulb, ArrowRight, Users } from 'lucide-react'
+import dynamic from "next/dynamic"
+
+const MessageCircle = dynamic(() => import("lucide-react").then(m => m.MessageCircle), { ssr: false })
+const Globe = dynamic(() => import("lucide-react").then(m => m.Globe), { ssr: false })
+const GraduationCap = dynamic(() => import("lucide-react").then(m => m.GraduationCap), { ssr: false })
+const Lightbulb = dynamic(() => import("lucide-react").then(m => m.Lightbulb), { ssr: false })
+const ArrowRight = dynamic(() => import("lucide-react").then(m => m.ArrowRight), { ssr: false })
+const Users = dynamic(() => import("lucide-react").then(m => m.Users), { ssr: false })
 
 export default function Home() {
   const [user, setUser] = useState<any>(null)
