@@ -1,0 +1,341 @@
+"use client"
+
+import { useState } from 'react'
+import Link from 'next/link'
+import { motion } from 'framer-motion'
+import { ThemeToggle } from '@/components/theme-toggle'
+
+// Define language options
+const languages = [
+  { code: 'en', name: 'English' },
+  { code: 'hi', name: 'Hindi' },
+  { code: 'bn', name: 'Bengali' },
+  { code: 'te', name: 'Telugu' },
+  { code: 'mr', name: 'Marathi' },
+  { code: 'ta', name: 'Tamil' },
+  { code: 'gu', name: 'Gujarati' },
+  { code: 'kn', name: 'Kannada' },
+  { code: 'ml', name: 'Malayalam' },
+  { code: 'pa', name: 'Punjabi' },
+];
+
+export default function TranslatePage() {
+  const [sourceText, setSourceText] = useState('');
+  const [translatedText, setTranslatedText] = useState('');
+  const [sourceLanguage, setSourceLanguage] = useState('en');
+  const [targetLanguage, setTargetLanguage] = useState('hi');
+  const [isLoading, setIsLoading] = useState(false);
+  const [culturalContext, setCulturalContext] = useState('');
+  const [formalityLevel, setFormalityLevel] = useState('neutral');
+  
+  // Handle translation
+  const handleTranslate = async () => {
+    if (!sourceText.trim()) return;
+    
+    setIsLoading(true);
+    
+    // Simulate API call for translation
+    setTimeout(() => {
+      // Mock translations based on target language
+      const translations = {
+        hi: {
+          text: 'नमस्ते, आप कैसे हैं? मुझे आपसे बात करके खुशी हुई।',
+          context: 'This is a formal Hindi greeting commonly used in professional settings. The use of "आप" indicates respect and formality.'
+        },
+        bn: {
+          text: 'নমস্কার, আপনি কেমন আছেন? আপনার সাথে কথা বলে ভালো লাগলো।',
+          context: 'This is a standard Bengali greeting with a medium level of formality, appropriate for most social situations.'
+        },
+        ta: {
+          text: 'வணக்கம், நீங்கள் எப்படி இருக்கிறீர்கள்? உங்களுடன் பேசுவது மகிழ்ச்சியாக இருந்தது.',
+          context: 'This is a Tamil greeting using the formal "நீங்கள்" form, which shows respect to the listener.'
+        },
+        mr: {
+          text: 'नमस्कार, तुम्ही कसे आहात? तुमच्याशी बोलून आनंद झाला.',
+          context: 'This is a Marathi greeting using a semi-formal tone, appropriate for peers or casual acquaintances.'
+        },
+        te: {
+          text: 'నమస్కారం, మీరు ఎలా ఉన్నారు? మీతో మాట్లాడటం సంతోషంగా ఉంది.',
+          context: 'This is a formal Telugu greeting using respectful forms, suitable for most social and professional contexts.'
+        },
+        gu: {
+          text: 'નમસ્તે, તમે કેમ છો? તમારી સાથે વાત કરીને આનંદ થયો.',
+          context: 'This is a standard Gujarati greeting with a neutral level of formality.'
+        },
+        kn: {
+          text: 'ನಮಸ್ಕಾರ, ನೀವು ಹೇಗಿದ್ದೀರಿ? ನಿಮ್ಮೊಂದಿಗೆ ಮಾತನಾಡಲು ಸಂತೋಷವಾಯಿತು.',
+          context: 'This is a formal Kannada greeting using respectful forms, appropriate for most contexts.'
+        },
+        ml: {
+          text: 'നമസ്കാരം, സുഖമാണോ? നിങ്ങളോട് സംസാരിച്ചതിൽ സന്തോഷം.',
+          context: 'This is a Malayalam greeting with a neutral tone, commonly used in Kerala.'
+        },
+        pa: {
+          text: 'ਸਤ ਸ੍ਰੀ ਅਕਾਲ, ਤੁਸੀਂ ਕਿਵੇਂ ਹੋ? ਤੁਹਾਡੇ ਨਾਲ ਗੱਲ ਕਰਕੇ ਖੁਸ਼ੀ ਹੋਈ।',
+          context: 'This is a Punjabi greeting starting with "Sat Sri Akal", a traditional Sikh greeting that literally means "God is Truth".'
+        },
+        en: {
+          text: 'Hello, how are you? It was nice talking to you.',
+          context: 'This is a standard English greeting with a neutral level of formality.'
+        }
+      };
+      
+      // Get translation for target language
+      const translation = translations[targetLanguage as keyof typeof translations] || translations.en;
+      
+      setTranslatedText(translation.text);
+      setCulturalContext(translation.context);
+      setIsLoading(false);
+    }, 1500);
+  };
+
+  // Handle swapping languages
+  const handleSwapLanguages = () => {
+    setSourceLanguage(targetLanguage);
+    setTargetLanguage(sourceLanguage);
+    setSourceText(translatedText);
+    setTranslatedText(sourceText);
+  };
+
+  return (
+    <div className="flex flex-col min-h-screen">
+      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container flex h-16 items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Link href="/">
+              <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 text-transparent bg-clip-text">
+                Samvaad AI
+              </span>
+            </Link>
+          </div>
+          <nav className="flex items-center gap-6">
+            <Link href="/chat" className="text-sm font-medium hover:underline underline-offset-4">
+              Chat
+            </Link>
+            <Link href="/translate" className="text-sm font-medium underline underline-offset-4">
+              Translate
+            </Link>
+            <Link href="/learn" className="text-sm font-medium hover:underline underline-offset-4">
+              Learn
+            </Link>
+            <ThemeToggle />
+          </nav>
+        </div>
+      </header>
+      
+      <main className="flex-1 container py-8">
+        <div className="max-w-4xl mx-auto">
+          <h1 className="text-3xl font-bold mb-6">Cultural Translation</h1>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <select 
+                  value={sourceLanguage}
+                  onChange={(e) => setSourceLanguage(e.target.value)}
+                  className="rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm"
+                >
+                  {languages.map((lang) => (
+                    <option key={lang.code} value={lang.code}>
+                      {lang.name}
+                    </option>
+                  ))}
+                </select>
+                
+                <button 
+                  onClick={handleSwapLanguages}
+                  className="p-2 rounded-full hover:bg-muted"
+                  aria-label="Swap languages"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4" />
+                  </svg>
+                </button>
+                
+                <select 
+                  value={targetLanguage}
+                  onChange={(e) => setTargetLanguage(e.target.value)}
+                  className="rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm"
+                >
+                  {languages.map((lang) => (
+                    <option key={lang.code} value={lang.code}>
+                      {lang.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="formality" className="block text-sm font-medium mb-1">
+                    Formality Level
+                  </label>
+                  <select 
+                    id="formality"
+                    value={formalityLevel}
+                    onChange={(e) => setFormalityLevel(e.target.value)}
+                    className="w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm"
+                  >
+                    <option value="formal">Formal</option>
+                    <option value="neutral">Neutral</option>
+                    <option value="informal">Informal</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label htmlFor="context" className="block text-sm font-medium mb-1">
+                    Context
+                  </label>
+                  <select 
+                    id="context"
+                    className="w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm"
+                  >
+                    <option value="general">General</option>
+                    <option value="business">Business</option>
+                    <option value="academic">Academic</option>
+                    <option value="casual">Casual</option>
+                    <option value="festival">Festival/Celebration</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div>
+                <textarea
+                  value={sourceText}
+                  onChange={(e) => setSourceText(e.target.value)}
+                  placeholder="Enter text to translate..."
+                  className="w-full h-40 rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm"
+                />
+              </div>
+              
+              <div className="flex justify-between">
+                <button
+                  onClick={() => setSourceText('')}
+                  className="rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm hover:bg-muted"
+                >
+                  Clear
+                </button>
+                
+                <div className="flex gap-2">
+                  <button
+                    className="rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm hover:bg-muted"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1 inline-block">
+                      <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path>
+                      <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                      <line x1="12" x2="12" y1="19" y2="22"></line>
+                    </svg>
+                    Voice
+                  </button>
+                  
+                  <button
+                    onClick={handleTranslate}
+                    disabled={isLoading || !sourceText.trim()}
+                    className="rounded-md bg-primary px-4 py-1 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 disabled:opacity-50"
+                  >
+                    {isLoading ? 'Translating...' : 'Translate'}
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            <div className="space-y-4">
+              <div className="rounded-md border bg-muted/30 p-4 h-40 overflow-y-auto">
+                {isLoading ? (
+                  <div className="flex items-center justify-center h-full">
+                    <div className="flex space-x-2">
+                      <div className="w-2 h-2 rounded-full bg-foreground/30 animate-bounce"></div>
+                      <div className="w-2 h-2 rounded-full bg-foreground/30 animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                      <div className="w-2 h-2 rounded-full bg-foreground/30 animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+                    </div>
+                  </div>
+                ) : translatedText ? (
+                  <div>
+                    <p>{translatedText}</p>
+                  </div>
+                ) : (
+                  <div className="text-muted-foreground flex items-center justify-center h-full">
+                    <p>Translation will appear here</p>
+                  </div>
+                )}
+              </div>
+              
+              {culturalContext && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="rounded-md border bg-muted/30 p-4"
+                >
+                  <h3 className="font-medium text-sm mb-1">Cultural Context</h3>
+                  <p className="text-sm text-muted-foreground">{culturalContext}</p>
+                </motion.div>
+              )}
+              
+              <div className="flex justify-end gap-2">
+                <button
+                  className="rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm hover:bg-muted"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1 inline-block">
+                    <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                  </svg>
+                  Save to Phrasebook
+                </button>
+                
+                <button
+                  className="rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm hover:bg-muted"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1 inline-block">
+                    <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path>
+                  </svg>
+                  Copy
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <div className="mt-8 rounded-lg border p-4 bg-muted/30">
+            <h2 className="text-xl font-bold mb-4">Recently Learned Phrases</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="rounded-md border p-3 bg-background">
+                <div className="flex justify-between">
+                  <span className="text-xs font-medium">Hindi</span>
+                  <span className="text-xs text-muted-foreground">Formal</span>
+                </div>
+                <p className="mt-1">नमस्ते, आप कैसे हैं?</p>
+                <p className="text-sm text-muted-foreground">Hello, how are you?</p>
+              </div>
+              
+              <div className="rounded-md border p-3 bg-background">
+                <div className="flex justify-between">
+                  <span className="text-xs font-medium">Tamil</span>
+                  <span className="text-xs text-muted-foreground">Casual</span>
+                </div>
+                <p className="mt-1">வணக்கம், எப்படி இருக்கிறீர்கள்?</p>
+                <p className="text-sm text-muted-foreground">Hello, how are you?</p>
+              </div>
+              
+              <div className="rounded-md border p-3 bg-background">
+                <div className="flex justify-between">
+                  <span className="text-xs font-medium">Bengali</span>
+                  <span className="text-xs text-muted-foreground">Festival</span>
+                </div>
+                <p className="mt-1">শুভ দুর্গা পূজা!</p>
+                <p className="text-sm text-muted-foreground">Happy Durga Puja!</p>
+              </div>
+              
+              <div className="rounded-md border p-3 bg-background">
+                <div className="flex justify-between">
+                  <span className="text-xs font-medium">Marathi</span>
+                  <span className="text-xs text-muted-foreground">Business</span>
+                </div>
+                <p className="mt-1">तुम्हाला भेटून आनंद झाला</p>
+                <p className="text-sm text-muted-foreground">Nice to meet you</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  )
+}
