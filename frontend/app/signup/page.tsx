@@ -4,10 +4,11 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
+
 import { Input } from '../../components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Select } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
 import { Eye, EyeOff, Mail, Lock, User, Globe } from 'lucide-react'
 
@@ -18,7 +19,7 @@ export default function SignupPage() {
     email: '',
     password: '',
     nativeLanguage: '',
-    learningLanguages: []
+    learningLanguages: [] as string[]
   })
   const [isLoading, setIsLoading] = useState(false)
 
@@ -157,17 +158,23 @@ export default function SignupPage() {
                 <Label htmlFor="nativeLanguage">Native Language</Label>
                 <div className="relative">
                   <Globe className="absolute left-3 top-3 h-4 w-4 text-muted-foreground z-10" />
-                  <Select onValueChange={(value) => setFormData({...formData, nativeLanguage: value})}>
-                    <SelectTrigger className="pl-10">
-                      <SelectValue placeholder="Select your native language" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {languages.map((lang) => (
-                        <SelectItem key={lang.value} value={lang.value}>
-                          {lang.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
+                  <Select
+                    id="nativeLanguage"
+                    value={formData.nativeLanguage}
+                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                      setFormData({ ...formData, nativeLanguage: e.target.value })
+                    }
+                    className="pl-10 w-full"
+                    required
+                  >
+                    <option value="" disabled>
+                      Select your native language
+                    </option>
+                    {languages.map((lang) => (
+                      <option key={lang.value} value={lang.value}>
+                        {lang.label}
+                      </option>
+                    ))}
                   </Select>
                 </div>
               </div>
@@ -176,17 +183,23 @@ export default function SignupPage() {
                 <Label htmlFor="learningLanguage">Language to Learn</Label>
                 <div className="relative">
                   <Globe className="absolute left-3 top-3 h-4 w-4 text-muted-foreground z-10" />
-                  <Select onValueChange={(value) => setFormData({...formData, learningLanguages: [value]})}>
-                    <SelectTrigger className="pl-10">
-                      <SelectValue placeholder="Select language to learn" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {languages.map((lang) => (
-                        <SelectItem key={lang.value} value={lang.value}>
-                          {lang.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
+                  <Select
+                    id="learningLanguage"
+                    value={formData.learningLanguages[0] || ""}
+                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                      setFormData({ ...formData, learningLanguages: [e.target.value] })
+                    }
+                    className="pl-10 w-full"
+                    required
+                  >
+                    <option value="" disabled>
+                      Select language to learn
+                    </option>
+                    {languages.map((lang) => (
+                      <option key={lang.value} value={lang.value}>
+                        {lang.label}
+                      </option>
+                    ))}
                   </Select>
                 </div>
               </div>
