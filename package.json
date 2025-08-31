@@ -20,6 +20,9 @@
   "author": "Smart India Hackathon Team",
   "license": "MIT",
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "autoprefixer": "file:...",
+    "concurrently": "^8.2.2",
+    "postcss": "file:...",
+    "tailwindcss": "file:..."
   }
 }
