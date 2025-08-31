@@ -2,21 +2,33 @@
 
 Write-Host "Setting up Samvaad AI project..." -ForegroundColor Green
 
+# Get the script directory to ensure we're working from the correct location
+$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+Set-Location $ScriptDir
+
 # Install root dependencies
 Write-Host "Installing root dependencies..." -ForegroundColor Cyan
 npm install
 
 # Install frontend dependencies
 Write-Host "Installing frontend dependencies..." -ForegroundColor Cyan
-cd frontend
-npm install
-cd ..
+Push-Location "frontend"
+if (Test-Path "package.json") {
+    npm install
+} else {
+    Write-Host "No package.json found in frontend directory" -ForegroundColor Yellow
+}
+Pop-Location
 
 # Install backend dependencies
 Write-Host "Installing backend dependencies..." -ForegroundColor Cyan
-cd backend
-npm install
-cd ..
+Push-Location "backend"
+if (Test-Path "package.json") {
+    npm install
+} else {
+    Write-Host "No package.json found in backend directory" -ForegroundColor Yellow
+}
+Pop-Location
 
 Write-Host "Setup completed successfully!" -ForegroundColor Green
 Write-Host ""
