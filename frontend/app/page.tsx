@@ -11,6 +11,7 @@ import { useAuth } from "@/providers/auth-provider"
 import { ErrorBoundary } from "@/components/error-boundary"
 import { ProgressTracker } from "@/components/progress-tracker"
 import { VoiceInput } from "@/components/voice-input"
+import ChatComponent from '@/components/ChatComponent';
 
 const MessageCircle = dynamic(() => import("lucide-react").then(m => m.MessageCircle), { 
   ssr: false,

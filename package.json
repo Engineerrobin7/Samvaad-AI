@@ -28,6 +28,7 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.57.0",
     "@types/dom-speech-recognition": "^0.0.6",
-    "ai": "^5.0.29"
+    "ai": "^5.0.29",
+    "openai": "^5.17.0"
   }
 }
