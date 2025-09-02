@@ -1,11 +1,9 @@
 import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
-import bcrypt from 'bcrypt';
-import pool from '../config/db';
+import bcrypt from 'bcryptjs';
+import { User } from '../models/User';
 
-// JWT secret from environment variables
-const JWT_SECRET = process.env.JWT_SECRET || 'samvaad-ai-secret-key';
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
 /**
  * Register a new user
@@ -13,64 +11,43 @@ const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
  */
 export const register = async (req: Request, res: Response) => {
   try {
-    const { name, email, password, preferredLanguage } = req.body;
-    
-    // Validate input
-    if (!name || !email || !password) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Name, email, and password are required' 
-      });
+    const { name, email, password, nativeLanguage, learningLanguages } = req.body;
+
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: 'User already exists' });
     }
-    
-    // Check if user already exists
-    const userExists = await pool.query(
-      'SELECT * FROM users WHERE email = $1',
-      [email]
-    );
-    
-    if (userExists.rows.length > 0) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'User with this email already exists' 
-      });
-    }
-    
-    // Hash password
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-    
-    // Create user
-    const newUser = await pool.query(
-      'INSERT INTO users (name, email, password, preferred_language) VALUES ($1, $2, $3, $4) RETURNING id, name, email, preferred_language',
-      [name, email, hashedPassword, preferredLanguage || 'en']
-    );
-    
-    // Generate JWT token
+
+    const hashedPassword = await bcrypt.hash(password, 12);
+
+    const user = await User.create({
+      name,
+      email,
+      password: hashedPassword,
+      nativeLanguage,
+      learningLanguages
+    });
+
+    // Fix: Properly type the JWT payload and options
     const token = jwt.sign(
-      { id: newUser.rows[0].id },
+      { userId: user._id.toString() },
       JWT_SECRET,
-      { expiresIn: JWT_EXPIRES_IN }
+      { expiresIn: '7d' } as jwt.SignOptions
     );
-    
-    return res.status(201).json({
-      success: true,
-      data: {
-        user: {
-          id: newUser.rows[0].id,
-          name: newUser.rows[0].name,
-          email: newUser.rows[0].email,
-          preferredLanguage: newUser.rows[0].preferred_language
-        },
-        token
+
+    res.status(201).json({
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        nativeLanguage: user.nativeLanguage,
+        learningLanguages: user.learningLanguages
       }
     });
   } catch (error) {
     console.error('Registration error:', error);
-    return res.status(500).json({ 
-      success: false, 
-      message: 'Error registering user' 
-    });
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
@@ -81,104 +58,36 @@ export const register = async (req: Request, res: Response) => {
 export const login = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
-    
-    // Validate input
-    if (!email || !password) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Email and password are required' 
-      });
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ message: 'Invalid credentials' });
     }
-    
-    // Check if user exists
-    const user = await pool.query(
-      'SELECT * FROM users WHERE email = $1',
-      [email]
-    );
-    
-    if (user.rows.length === 0) {
-      return res.status(401).json({ 
-        success: false, 
-        message: 'Invalid credentials' 
-      });
+
+    const isValidPassword = await bcrypt.compare(password, user.password);
+    if (!isValidPassword) {
+      return res.status(400).json({ message: 'Invalid credentials' });
     }
-    
-    // Check password
-    const isMatch = await bcrypt.compare(password, user.rows[0].password);
-    
-    if (!isMatch) {
-      return res.status(401).json({ 
-        success: false, 
-        message: 'Invalid credentials' 
-      });
-    }
-    
-    // Generate JWT token
+
+    // Fix: Properly type the JWT payload and options
     const token = jwt.sign(
-      { id: user.rows[0].id },
+      { userId: user._id.toString() },
       JWT_SECRET,
-      { expiresIn: JWT_EXPIRES_IN }
+      { expiresIn: '7d' } as jwt.SignOptions
     );
-    
-    return res.status(200).json({
-      success: true,
-      data: {
-        user: {
-          id: user.rows[0].id,
-          name: user.rows[0].name,
-          email: user.rows[0].email,
-          preferredLanguage: user.rows[0].preferred_language
-        },
-        token
+
+    res.json({
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        nativeLanguage: user.nativeLanguage,
+        learningLanguages: user.learningLanguages
       }
     });
   } catch (error) {
     console.error('Login error:', error);
-    return res.status(500).json({ 
-      success: false, 
-      message: 'Error logging in' 
-    });
-  }
-};
-
-/**
- * Get user profile
- * @route GET /api/auth/profile
- */
-export const getProfile = async (req: Request, res: Response) => {
-  try {
-    // User ID is attached by the authentication middleware
-    const userId = (req as any).user.id;
-    
-    const user = await pool.query(
-      'SELECT id, name, email, preferred_language, created_at FROM users WHERE id = $1',
-      [userId]
-    );
-    
-    if (user.rows.length === 0) {
-      return res.status(404).json({ 
-        success: false, 
-        message: 'User not found' 
-      });
-    }
-    
-    return res.status(200).json({
-      success: true,
-      data: {
-        user: {
-          id: user.rows[0].id,
-          name: user.rows[0].name,
-          email: user.rows[0].email,
-          preferredLanguage: user.rows[0].preferred_language,
-          createdAt: user.rows[0].created_at
-        }
-      }
-    });
-  } catch (error) {
-    console.error('Get profile error:', error);
-    return res.status(500).json({ 
-      success: false, 
-      message: 'Error getting user profile' 
-    });
+    res.status(500).json({ message: 'Server error' });
   }
 };
