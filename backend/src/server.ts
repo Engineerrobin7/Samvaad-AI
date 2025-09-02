@@ -1,25 +1,26 @@
 import express from 'express';
-import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { authRouter } from './routes/auth';
+import authRouter from './routes/auth.routes';
+import chatRouter from './routes/chat.routes';
+import translateRouter from './routes/translate.routes';
+import tipsRouter from './routes/tips.routes';
 
 dotenv.config();
 
-const app = express();
+const server = express();
 
-app.use(cors());
-app.use(express.json());
-
-// Connect to MongoDB
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/samvaad')
-  .then(() => console.log('Connected to MongoDB'))
-  .catch(err => console.error('MongoDB connection error:', err));
+// Middleware
+server.use(cors({
+  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  credentials: true
+}));
+server.use(express.json());
 
 // Routes
-app.use('/api/auth', authRouter);
+server.use('/api/auth', authRouter);
+server.use('/api/chat', chatRouter);
+server.use('/api/translate', translateRouter);
+server.use('/api/tips', tipsRouter);
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+export default server;

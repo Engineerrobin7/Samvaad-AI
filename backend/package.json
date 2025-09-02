@@ -11,13 +11,13 @@
     "db:setup": "ts-node src/db/setup.ts"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.57.0",
     "bcrypt": "^5.1.1",
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
     "dotenv": "^16.6.1",
     "express": "^4.21.2",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.18.0",
     "pg": "^8.11.3",
     "redis": "^4.6.10",
     "socket.io": "^4.7.2",
