@@ -1,12 +1,9 @@
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import authRouter from './routes/auth.routes';
 import chatRouter from './routes/chat.routes';
 import translateRouter from './routes/translate.routes';
 import tipsRouter from './routes/tips.routes';
-
-dotenv.config();
 
 const server = express();
 

@@ -2,7 +2,7 @@ import express from 'express';
 import http from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
-import dotenv from 'dotenv';
+import { config } from 'dotenv';
 import authRoutes from './routes/auth.routes';
 import translateRoutes from './routes/translate.routes';
 import chatRoutes from './routes/chat.routes';
@@ -11,7 +11,7 @@ import { setupSocketHandlers } from './socket';
 import { connectDB } from './config/db';
 
 // Load environment variables
-dotenv.config();
+config();
 
 // Initialize Express app
 export const app = express();
@@ -62,16 +62,14 @@ startServer();
 
 export default server;
 
-import dotenv from 'dotenv';
+import { config } from 'dotenv';
 import server from './server';
 
-// Configure environment variables
-dotenv.config();
-
-// Server configuration
-const PORT = process.env.PORT || 5000;
+// Load environment variables
+config();
 
 // Start server
+const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
