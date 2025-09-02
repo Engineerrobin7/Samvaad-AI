@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google';
 import { Logo } from '@/components/ui/logo'
 import { Navbar } from '@/components/navbar'
 import { ThemeProvider } from '@/components/theme-provider'
+import { AuthProvider } from "@/providers/auth-provider"
 import './globals.css'
 
 const inter = Inter({ subsets: ['latin'] });
@@ -26,20 +27,22 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <div className="min-h-screen flex flex-col">
-            <Navbar />
-            <main className="flex-1">
-              {children}
-            </main>
-            <footer className="border-t py-6">
-              <div className="container flex justify-between items-center">
-                <Logo />
-                <p className="text-sm text-muted-foreground">
-                  © 2025 Samvaad AI. All rights reserved.
-                </p>
-              </div>
-            </footer>
-          </div>
+          <AuthProvider>
+            <div className="min-h-screen flex flex-col">
+              <Navbar />
+              <main className="flex-1">
+                {children}
+              </main>
+              <footer className="border-t py-6">
+                <div className="container flex justify-between items-center">
+                  <Logo />
+                  <p className="text-sm text-muted-foreground">
+                    © 2025 Samvaad AI. All rights reserved.
+                  </p>
+                </div>
+              </footer>
+            </div>
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>

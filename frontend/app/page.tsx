@@ -31,6 +31,28 @@ export default function Home() {
     // Process voice input...
   }
 
+  const handleLogout = () => {
+    logout()
+    // Add any additional logout logic here
+  }
+
+  // Add chatbot script
+  useEffect(() => {
+    const script = document.createElement('script')
+    script.id = 'omnidimension-web-widget'
+    script.src = 'https://backend.omnidim.io/web_widget.js?secret_key=dacf3b077a129292507281ed8a74e135'
+    script.async = true
+    document.body.appendChild(script)
+
+    return () => {
+      // Cleanup on unmount
+      const existingScript = document.getElementById('omnidimension-web-widget')
+      if (existingScript) {
+        document.body.removeChild(existingScript)
+      }
+    }
+  }, [])
+
   return (
     <ErrorBoundary>
       <div className="flex flex-col min-h-screen">
