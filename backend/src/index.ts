@@ -8,13 +8,12 @@ import translateRoutes from './routes/translate.routes';
 import chatRoutes from './routes/chat.routes';
 import tipsRoutes from './routes/tips.routes';
 import { setupSocketHandlers } from './socket';
-import { connectDB } from './config/db';
 
 // Load environment variables
 config();
 
 // Initialize Express app
-export const app = express();
+const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
@@ -46,30 +45,6 @@ setupSocketHandlers(io);
 // Start server
 const PORT = process.env.PORT || 5000;
 
-async function startServer() {
-  try {
-    await connectDB();
-    server.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
-    });
-  } catch (error) {
-    console.error('Failed to start server:', error);
-    process.exit(1);
-  }
-}
-
-startServer();
-
-export default server;
-
-import { config } from 'dotenv';
-import server from './server';
-
-// Load environment variables
-config();
-
-// Start server
-const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
