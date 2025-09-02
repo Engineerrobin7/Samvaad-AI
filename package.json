@@ -24,5 +24,8 @@
     "concurrently": "^8.2.2",
     "postcss": "file:...",
     "tailwindcss": "file:..."
+  },
+  "dependencies": {
+    "ai": "^5.0.29"
   }
 }
