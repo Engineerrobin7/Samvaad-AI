@@ -12,7 +12,10 @@ import { ErrorBoundary } from "@/components/error-boundary"
 import { ProgressTracker } from "@/components/progress-tracker"
 import { VoiceInput } from "@/components/voice-input"
 
-const MessageCircle = dynamic(() => import("lucide-react").then(m => m.MessageCircle), { ssr: false })
+const MessageCircle = dynamic(() => import("lucide-react").then(m => m.MessageCircle), { 
+  ssr: false,
+  loading: () => <div className="w-6 h-6 animate-pulse bg-gray-200 rounded" />
+})
 const Globe = dynamic(() => import("lucide-react").then(m => m.Globe), { ssr: false })
 const GraduationCap = dynamic(() => import("lucide-react").then(m => m.GraduationCap), { ssr: false })
 const Lightbulb = dynamic(() => import("lucide-react").then(m => m.Lightbulb), { ssr: false })
