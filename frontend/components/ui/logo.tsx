@@ -5,7 +5,7 @@ export function Logo() {
   return (
     <Link href="/" className="flex items-center space-x-2">
       <Image
-        src="/images/logo.png" // Make sure logo.png exists in public/images/
+        src="/images/logo.jpg"
         alt="Samvaad AI Logo"
         width={40}
         height={40}
