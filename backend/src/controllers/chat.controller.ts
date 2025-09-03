@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
-import { supabase } from '../config/supabase';
+import { pool } from '../db/pool';
 
 /**
  * Get chat history for a room
@@ -10,16 +10,10 @@ export const getChatHistory = async (req: Request, res: Response) => {
   try {
     const { roomId } = req.params;
 
-    // Fetch messages from Supabase
-    const { data: messages, error } = await supabase
-      .from('chat_messages')
-      .select('*')
-      .eq('room_id', roomId)
-      .order('created_at', { ascending: true });
-
-    if (error) {
-      throw error;
-    }
+    const { rows: messages } = await pool.query(
+      'SELECT * FROM chat_messages WHERE room_id = $1 ORDER BY created_at ASC',
+      [roomId]
+    );
 
     return res.status(200).json({
       success: true,
@@ -44,7 +38,7 @@ export const getChatHistory = async (req: Request, res: Response) => {
 export const createChatRoom = async (req: Request, res: Response) => {
   try {
     const { name, participants, primaryLanguage } = req.body;
-    const userId = (req as any).user?.id || null;
+    const userId = (req as any).user?.id;
 
     if (!name || !primaryLanguage) {
       return res.status(400).json({ 
@@ -53,36 +47,31 @@ export const createChatRoom = async (req: Request, res: Response) => {
       });
     }
 
-    // Generate room ID
     const roomId = uuidv4();
 
-    // Store the room in Supabase
-    const { error } = await supabase
-      .from('chat_rooms')
-      .insert([
-        {
-          id: roomId,
-          name,
-          primary_language: primaryLanguage,
-          created_by: userId,
-          created_at: new Date().toISOString()
-        }
-      ]);
+    await pool.query('BEGIN');
 
-    if (error) {
-      throw error;
+    const newRoom = await pool.query(
+      'INSERT INTO chat_rooms (id, name, primary_language, created_by) VALUES ($1, $2, $3, $4) RETURNING *',
+      [roomId, name, primaryLanguage, userId]
+    );
+
+    if (participants && participants.length > 0) {
+      const participantValues = participants.map((p: any) => `('${roomId}', ${p.id})`).join(',');
+      await pool.query(`INSERT INTO chat_participants (room_id, user_id) VALUES ${participantValues}`);
     }
+
+    // Add the creator as a participant
+    await pool.query('INSERT INTO chat_participants (room_id, user_id) VALUES ($1, $2)', [roomId, userId]);
+
+    await pool.query('COMMIT');
 
     return res.status(201).json({
       success: true,
-      data: {
-        roomId,
-        name,
-        primaryLanguage,
-        createdAt: new Date().toISOString()
-      }
+      data: newRoom.rows[0]
     });
   } catch (error) {
+    await pool.query('ROLLBACK');
     console.error('Create chat room error:', error);
     return res.status(500).json({ 
       success: false, 

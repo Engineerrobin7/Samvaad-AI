@@ -91,6 +91,33 @@ async function insertDemoData(pool: Pool) {
       (3, 'en', 2, 120)
     ON CONFLICT (user_id, language_code) DO NOTHING;
   `);
+
+  // Insert demo cultural tips
+  await pool.query(`
+    INSERT INTO cultural_tips (id, language_code, title, content, category, difficulty)
+    VALUES
+      ('hi-1', 'hi', 'Greeting Etiquette', 'In Hindi culture, "Namaste" with folded hands is a respectful greeting for all ages and social statuses.', 'social', 'beginner'),
+      ('hi-2', 'hi', 'Formal vs Informal Speech', 'Hindi has three levels of formality: "आप" (aap) for formal/respectful, "तुम" (tum) for friends/family, and "तू" (tu) for very close relationships or children.', 'language', 'intermediate'),
+      ('hi-3', 'hi', 'Festival Greetings', 'During Diwali, say "Diwali ki Shubhkamnayein" (दिवाली की शुभकामनाएं) for formal wishes or "Happy Diwali" in casual settings.', 'festivals', 'beginner'),
+      ('bn-1', 'bn', 'Bengali Greetings', 'In Bengali culture, "Nomoshkar" (নমস্কার) with folded hands is the traditional greeting, while "Kemon acho?" (কেমন আছো?) means "How are you?"', 'social', 'beginner'),
+      ('bn-2', 'bn', 'Respect for Elders', 'Bengali culture places high importance on respecting elders. Address older people with "apni" (আপনি) rather than "tumi" (তুমি).', 'social', 'beginner'),
+      ('te-1', 'te', 'Telugu Greetings', 'In Telugu, "Namaskaram" (నమస్కారం) is a formal greeting, while "Baagunnara?" (బాగున్నారా?) means "How are you?"', 'social', 'beginner'),
+      ('te-2', 'te', 'Telugu Festivals', 'During Sankranti, a major harvest festival, Telugu people exchange "Sankranti Shubhakankshalu" (సంక్రాంతి శుభాకాంక్షలు) as greetings.', 'festivals', 'intermediate')
+    ON CONFLICT (id) DO NOTHING;
+  `);
+
+  // Insert demo language learning tips
+  await pool.query(`
+    INSERT INTO language_tips (id, language_code, title, content, category, difficulty)
+    VALUES
+      ('hi-lang-1', 'hi', 'Hindi Pronunciation', 'Hindi has retroflex consonants (ट, ठ, ड, ढ) that are pronounced with the tongue curled back.', 'pronunciation', 'beginner'),
+      ('hi-lang-2', 'hi', 'Hindi Sentence Structure', 'Hindi follows Subject-Object-Verb order, unlike English which uses Subject-Verb-Object.', 'grammar', 'intermediate'),
+      ('bn-lang-1', 'bn', 'Bengali Vowels', 'Bengali has 7 vowels with both oral and nasal forms, making pronunciation challenging for beginners.', 'pronunciation', 'intermediate'),
+      ('bn-lang-2', 'bn', 'Bengali Script', 'Bengali script is derived from the eastern Nagari script and has rounded shapes due to the traditional writing materials used.', 'writing', 'beginner'),
+      ('te-lang-1', 'te', 'Telugu Alphabet', 'Telugu has 56 letters: 16 vowels, 3 vowel modifiers, and 37 consonants.', 'writing', 'beginner'),
+      ('te-lang-2', 'te', 'Telugu Pronunciation', 'Telugu distinguishes between short and long vowels, which can change the meaning of words.', 'pronunciation', 'intermediate')
+    ON CONFLICT (id) DO NOTHING;
+  `);
 }
 
 // Run setup

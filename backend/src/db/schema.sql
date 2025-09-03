@@ -69,13 +69,54 @@ CREATE TABLE IF NOT EXISTS language_proficiency (
   PRIMARY KEY (user_id, language_code)
 );
 
+-- Cultural tips
+CREATE TABLE IF NOT EXISTS cultural_tips (
+    id VARCHAR(50) PRIMARY KEY,
+    language_code VARCHAR(10) NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    content TEXT NOT NULL,
+    category VARCHAR(50),
+    difficulty VARCHAR(50)
+);
+
+-- Language learning tips
+CREATE TABLE IF NOT EXISTS language_tips (
+    id VARCHAR(50) PRIMARY KEY,
+    language_code VARCHAR(10) NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    content TEXT NOT NULL,
+    category VARCHAR(50),
+    difficulty VARCHAR(50)
+);
+
 -- Cultural tips learned
 CREATE TABLE IF NOT EXISTS cultural_tips_learned (
   user_id INTEGER REFERENCES users(id),
-  tip_id VARCHAR(50) NOT NULL,
+  tip_id VARCHAR(50) REFERENCES cultural_tips(id),
   language_code VARCHAR(10) NOT NULL,
   learned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (user_id, tip_id)
+);
+
+-- AI Conversation Logs
+CREATE TABLE IF NOT EXISTS ai_conversation_logs (
+    id SERIAL PRIMARY KEY,
+    conversation_id VARCHAR(36) NOT NULL,
+    user_id INTEGER REFERENCES users(id),
+    model VARCHAR(50),
+    message TEXT NOT NULL,
+    reply TEXT NOT NULL,
+    language VARCHAR(10),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Human Escalations
+CREATE TABLE IF NOT EXISTS human_escalations (
+    id SERIAL PRIMARY KEY,
+    conversation_id VARCHAR(36) NOT NULL,
+    status VARCHAR(20) DEFAULT 'pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Create indexes for performance
@@ -83,3 +124,5 @@ CREATE INDEX IF NOT EXISTS idx_chat_messages_room_id ON chat_messages(room_id);
 CREATE INDEX IF NOT EXISTS idx_translations_message_id ON translations(message_id);
 CREATE INDEX IF NOT EXISTS idx_user_achievements_user_id ON user_achievements(user_id);
 CREATE INDEX IF NOT EXISTS idx_cultural_tips_learned_user_id ON cultural_tips_learned(user_id);
+CREATE INDEX IF NOT EXISTS idx_ai_conversation_logs_conversation_id ON ai_conversation_logs(conversation_id);
+CREATE INDEX IF NOT EXISTS idx_human_escalations_conversation_id ON human_escalations(conversation_id);

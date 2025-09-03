@@ -1,47 +1,39 @@
 import { Request, Response } from 'express';
-import { supabase } from '../config/supabase';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import { pool } from '../db/pool';
+
+const JWT_SECRET = process.env.JWT_SECRET || 'samvaad-ai-secret-key';
 
 export const authController = {
   async register(req: Request, res: Response) {
     try {
-      const { email, password, name, nativeLanguage, learningLanguages } = req.body;
+      const { email, password, name, preferred_language } = req.body;
 
-      // Create auth user
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password
-      });
-
-      if (authError) {
-        return res.status(400).json({ message: authError.message });
+      // Check if user already exists
+      const userExists = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+      if (userExists.rows.length > 0) {
+        return res.status(400).json({ message: 'User already exists' });
       }
 
-      // Create user profile
-      const { error: profileError } = await supabase
-        .from('users')
-        .insert([
-          {
-            id: authData.user!.id,
-            email,
-            name,
-            native_language: nativeLanguage,
-            learning_languages: learningLanguages
-          }
-        ]);
+      // Hash password
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(password, salt);
 
-      if (profileError) {
-        return res.status(400).json({ message: profileError.message });
-      }
+      // Create user
+      const newUser = await pool.query(
+        'INSERT INTO users (name, email, password, preferred_language) VALUES ($1, $2, $3, $4) RETURNING *',
+        [name, email, hashedPassword, preferred_language]
+      );
 
-      res.status(201).json({
-        user: {
-          id: authData.user!.id,
-          email,
-          name,
-          nativeLanguage,
-          learningLanguages
-        }
+      const user = newUser.rows[0];
+
+      // Create token
+      const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, {
+        expiresIn: '7d',
       });
+
+      res.status(201).json({ user, token });
     } catch (error) {
       console.error('Registration error:', error);
       res.status(500).json({ message: 'Server error' });
@@ -52,30 +44,26 @@ export const authController = {
     try {
       const { email, password } = req.body;
 
-      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-
-      if (authError) {
-        return res.status(400).json({ message: authError.message });
+      // Check if user exists
+      const userResult = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+      if (userResult.rows.length === 0) {
+        return res.status(400).json({ message: 'Invalid credentials' });
       }
 
-      // Get user profile
-      const { data: profile, error: profileError } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', authData.user.id)
-        .single();
+      const user = userResult.rows[0];
 
-      if (profileError) {
-        return res.status(400).json({ message: profileError.message });
+      // Check password
+      const isMatch = await bcrypt.compare(password, user.password);
+      if (!isMatch) {
+        return res.status(400).json({ message: 'Invalid credentials' });
       }
 
-      res.json({
-        user: profile,
-        session: authData.session
+      // Create token
+      const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, {
+        expiresIn: '7d',
       });
+
+      res.json({ user, token });
     } catch (error) {
       console.error('Login error:', error);
       res.status(500).json({ message: 'Server error' });

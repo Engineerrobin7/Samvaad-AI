@@ -1,10 +1,10 @@
 export interface User {
-  id: string;
+  id: number;
   name: string;
   email: string;
-  nativeLanguage: string;
-  learningLanguages: string[];
-  progress: {
-    [key: string]: number;
-  };
+  preferred_language: string;
+  points: number;
+  level: number;
+  created_at: string;
+  updated_at: string;
 }

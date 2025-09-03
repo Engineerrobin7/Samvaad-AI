@@ -4,9 +4,10 @@ import { Server } from 'socket.io';
 import cors from 'cors';
 import { config } from 'dotenv';
 import authRoutes from './routes/auth.routes';
-import translateRoutes from './routes/translate.routes';
 import chatRoutes from './routes/chat.routes';
 import tipsRoutes from './routes/tips.routes';
+import aiRoutes from './routes/ai.routes';
+import faqRoutes from './routes/faq.routes';
 import { setupSocketHandlers } from './socket';
 
 // Load environment variables
@@ -30,9 +31,10 @@ app.use(express.urlencoded({ extended: true }));
 
 // Routes
 app.use('/api/auth', authRoutes);
-app.use('/api/translate', translateRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/tips', tipsRoutes);
+app.use('/api/ai', aiRoutes);
+app.use('/api/faq', faqRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
