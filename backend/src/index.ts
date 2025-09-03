@@ -9,6 +9,7 @@ import tipsRoutes from './routes/tips.routes';
 import aiRoutes from './routes/ai.routes';
 import faqRoutes from './routes/faq.routes';
 import { setupSocketHandlers } from './socket';
+import { connectRedis } from './config/redis';
 
 // Load environment variables
 config();
@@ -35,7 +36,7 @@ app.use('/api/chat', chatRoutes);
 app.use('/api/tips', tipsRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/faq', faqRoutes);
-
+app.use(cors({ origin: 'http://localhost:3000', credentials: true }));
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.status(200).json({ status: 'ok', message: 'Samvaad AI API is running' });
@@ -47,6 +48,11 @@ setupSocketHandlers(io);
 // Start server
 const PORT = process.env.PORT || 5000;
 
-server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+const startServer = async () => {
+  await connectRedis();
+  server.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+};
+
+startServer();

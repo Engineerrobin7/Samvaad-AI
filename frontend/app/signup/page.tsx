@@ -1,7 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useRouter } from 'next/navigation'
 import dynamic from "next/dynamic"
+import { useAuth } from "@/providers/auth-provider"
 
 const Eye = dynamic(() => import("lucide-react").then(m => m.Eye), { ssr: false })
 const EyeOff = dynamic(() => import("lucide-react").then(m => m.EyeOff), { ssr: false })
@@ -13,14 +15,21 @@ const Globe = dynamic(() => import("lucide-react").then(m => m.Globe), { ssr: fa
 export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [formData, setFormData] = useState({
-    fullName: "",
+    name: "",
     email: "",
     password: "",
-    nativeLanguage: "",
-    learningLanguage: ""
+    preferred_language: "",
   })
   const [isLoading, setIsLoading] = useState(false)
-  const [success, setSuccess] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const { register, user } = useAuth()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (user) {
+      router.push('/');
+    }
+  }, [user, router]);
 
   const languages = [
     { value: "en", label: "English" },
@@ -37,13 +46,17 @@ export default function SignupPage() {
     { value: "as", label: "Assamese" }
   ]
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
-    setTimeout(() => {
+    setError(null)
+    try {
+      await register({ name: formData.name, email: formData.email, preferred_language: formData.preferred_language }, formData.password)
+    } catch (err: any) {
+      setError(err.message || 'An error occurred');
+    } finally {
       setIsLoading(false)
-      setSuccess(true)
-    }, 1200)
+    }
   }
 
   return (
@@ -57,144 +70,107 @@ export default function SignupPage() {
             Create your free account and start your language journey!
           </p>
         </div>
-        {success ? (
-          <div className="flex flex-col items-center justify-center py-12">
-            <div className="rounded-full bg-green-100 p-4 mb-4">
-              <svg className="h-8 w-8 text-green-600" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-              </svg>
+        {error && <p className="text-red-500 text-center">{error}</p>}
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+              Full Name
+            </label>
+            <div className="relative">
+              <span className="absolute left-3 top-2.5 text-gray-400">
+                <User className="h-5 w-5" />
+              </span>
+              <input
+                id="name"
+                type="text"
+                required
+                className="pl-10 pr-3 py-2 w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-600 transition"
+                placeholder="Enter your full name"
+                value={formData.name}
+                onChange={e => setFormData({ ...formData, name: e.target.value })}
+              />
             </div>
-            <h2 className="text-xl font-semibold mb-2">Signup Successful!</h2>
-            <p className="text-gray-500 dark:text-gray-400 mb-4">Welcome to Samvaad AI. You can now explore the platform.</p>
           </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                Full Name
-              </label>
-              <div className="relative">
-                <span className="absolute left-3 top-2.5 text-gray-400">
-                  <User className="h-5 w-5" />
-                </span>
-                <input
-                  id="fullName"
-                  type="text"
-                  required
-                  className="pl-10 pr-3 py-2 w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-600 transition"
-                  placeholder="Enter your full name"
-                  value={formData.fullName}
-                  onChange={e => setFormData({ ...formData, fullName: e.target.value })}
-                />
-              </div>
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+              Email
+            </label>
+            <div className="relative">
+              <span className="absolute left-3 top-2.5 text-gray-400">
+                <Mail className="h-5 w-5" />
+              </span>
+              <input
+                id="email"
+                type="email"
+                required
+                className="pl-10 pr-3 py-2 w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-600 transition"
+                placeholder="Enter your email"
+                value={formData.email}
+                onChange={e => setFormData({ ...formData, email: e.target.value })}
+              />
             </div>
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                Email
-              </label>
-              <div className="relative">
-                <span className="absolute left-3 top-2.5 text-gray-400">
-                  <Mail className="h-5 w-5" />
-                </span>
-                <input
-                  id="email"
-                  type="email"
-                  required
-                  className="pl-10 pr-3 py-2 w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-600 transition"
-                  placeholder="Enter your email"
-                  value={formData.email}
-                  onChange={e => setFormData({ ...formData, email: e.target.value })}
-                />
-              </div>
+          </div>
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+              Password
+            </label>
+            <div className="relative">
+              <span className="absolute left-3 top-2.5 text-gray-400">
+                <Lock className="h-5 w-5" />
+              </span>
+              <input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                required
+                className="pl-10 pr-10 py-2 w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-600 transition"
+                placeholder="Create a password"
+                value={formData.password}
+                onChange={e => setFormData({ ...formData, password: e.target.value })}
+              />
+              <button
+                type="button"
+                className="absolute right-2 top-2.5 text-gray-400 hover:text-blue-600 transition"
+                onClick={() => setShowPassword(v => !v)}
+                tabIndex={-1}
+              >
+                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+              </button>
             </div>
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                Password
-              </label>
-              <div className="relative">
-                <span className="absolute left-3 top-2.5 text-gray-400">
-                  <Lock className="h-5 w-5" />
-                </span>
-                <input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  required
-                  className="pl-10 pr-10 py-2 w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-600 transition"
-                  placeholder="Create a password"
-                  value={formData.password}
-                  onChange={e => setFormData({ ...formData, password: e.target.value })}
-                />
-                <button
-                  type="button"
-                  className="absolute right-2 top-2.5 text-gray-400 hover:text-blue-600 transition"
-                  onClick={() => setShowPassword(v => !v)}
-                  tabIndex={-1}
-                >
-                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                </button>
-              </div>
-            </div>
-            <div>
-              <label htmlFor="nativeLanguage" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                Native Language
-              </label>
-              <div className="relative">
-                <span className="absolute left-3 top-2.5 text-gray-400">
-                  <Globe className="h-5 w-5" />
-                </span>
-                <select
-                  id="nativeLanguage"
-                  required
-                  className="pl-10 pr-3 py-2 w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-600 transition"
-                  value={formData.nativeLanguage}
-                  onChange={e => setFormData({ ...formData, nativeLanguage: e.target.value })}
-                >
-                  <option value="" disabled>
-                    Select your native language
+          </div>
+          <div>
+            <label htmlFor="preferred_language" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+              Preferred Language
+            </label>
+            <div className="relative">
+              <span className="absolute left-3 top-2.5 text-gray-400">
+                <Globe className="h-5 w-5" />
+              </span>
+              <select
+                id="preferred_language"
+                required
+                className="pl-10 pr-3 py-2 w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-600 transition"
+                value={formData.preferred_language}
+                onChange={e => setFormData({ ...formData, preferred_language: e.target.value })}
+              >
+                <option value="" disabled>
+                  Select your preferred language
+                </option>
+                {languages.map(lang => (
+                  <option key={lang.value} value={lang.value}>
+                    {lang.label}
                   </option>
-                  {languages.map(lang => (
-                    <option key={lang.value} value={lang.value}>
-                      {lang.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
+                ))}
+              </select>
             </div>
-            <div>
-              <label htmlFor="learningLanguage" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                Language to Learn
-              </label>
-              <div className="relative">
-                <span className="absolute left-3 top-2.5 text-gray-400">
-                  <Globe className="h-5 w-5" />
-                </span>
-                <select
-                  id="learningLanguage"
-                  required
-                  className="pl-10 pr-3 py-2 w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-600 transition"
-                  value={formData.learningLanguage}
-                  onChange={e => setFormData({ ...formData, learningLanguage: e.target.value })}
-                >
-                  <option value="" disabled>
-                    Select language to learn
-                  </option>
-                  {languages.map(lang => (
-                    <option key={lang.value} value={lang.value}>
-                      {lang.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            <button
-              type="submit"
-              className="w-full py-2 rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold shadow-md hover:from-blue-700 hover:to-purple-700 transition"
-              disabled={isLoading}
-            >
-              {isLoading ? "Creating account..." : "Create Account"}
-            </button>
-          </form>
-        )}
+          </div>
+          <button
+            type="submit"
+            className="w-full py-2 rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold shadow-md hover:from-blue-700 hover:to-purple-700 transition"
+            disabled={isLoading}
+          >
+            {isLoading ? "Creating account..." : "Create Account"}
+          </button>
+        </form>
       </div>
     </div>
   )

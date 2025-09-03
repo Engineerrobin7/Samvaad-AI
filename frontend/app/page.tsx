@@ -75,9 +75,6 @@ export default function Home() {
               <Link href="/chat" className="text-sm font-medium hover:underline underline-offset-4">
                 Chat
               </Link>
-              <Link href="/translate" className="text-sm font-medium hover:underline underline-offset-4">
-                Translate
-              </Link>
               <Link href="/learn" className="text-sm font-medium hover:underline underline-offset-4">
                 Learn
               </Link>
@@ -122,9 +119,9 @@ export default function Home() {
                       Samvaad AI helps you communicate across languages with cultural context and understanding.
                     </p>
                     <div className="flex flex-col gap-2 min-[400px]:flex-row">
-                      <Link href="/translate">
+                      <Link href="/chat">
                         <Button size="lg" className="inline-flex items-center justify-center">
-                          Start Translating
+                          Start Chatting
                           <ArrowRight className="ml-2 h-4 w-4" />
                         </Button>
                       </Link>
