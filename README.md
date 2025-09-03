@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Samvaad AI
 
 ## Smart India Hackathon 2025 Project
@@ -88,4 +87,4 @@ samvaad-ai/
 MIT
 =======
 # Samvaad-AI
->>>>>>> 603a2c79ce6612c3b0c4f7ad40d58bf9983a0226
+
