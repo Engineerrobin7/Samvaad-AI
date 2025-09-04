@@ -18,7 +18,8 @@ export default function SignupPage() {
     name: "",
     email: "",
     password: "",
-    preferred_language: "",
+    nativeLanguage: "",
+    learningLanguages: []
   })
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -51,7 +52,12 @@ export default function SignupPage() {
     setIsLoading(true)
     setError(null)
     try {
-      await register({ name: formData.name, email: formData.email, preferred_language: formData.preferred_language }, formData.password)
+      await register({
+        name: formData.name,
+        email: formData.email,
+        nativeLanguage: formData.nativeLanguage,
+        learningLanguages: formData.learningLanguages
+      }, formData.password)
     } catch (err: any) {
       setError(err.message || 'An error occurred');
     } finally {
@@ -138,23 +144,47 @@ export default function SignupPage() {
             </div>
           </div>
           <div>
-            <label htmlFor="preferred_language" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-              Preferred Language
+            <label htmlFor="nativeLanguage" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+              Native Language
             </label>
             <div className="relative">
               <span className="absolute left-3 top-2.5 text-gray-400">
                 <Globe className="h-5 w-5" />
               </span>
               <select
-                id="preferred_language"
+                id="nativeLanguage"
                 required
                 className="pl-10 pr-3 py-2 w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-600 transition"
-                value={formData.preferred_language}
-                onChange={e => setFormData({ ...formData, preferred_language: e.target.value })}
+                value={formData.nativeLanguage}
+                onChange={e => setFormData({ ...formData, nativeLanguage: e.target.value })}
               >
                 <option value="" disabled>
-                  Select your preferred language
+                  Select your native language
                 </option>
+                {languages.map(lang => (
+                  <option key={lang.value} value={lang.value}>
+                    {lang.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <div>
+            <label htmlFor="learningLanguages" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+              Languages You Want to Learn
+            </label>
+            <div className="relative">
+              <span className="absolute left-3 top-2.5 text-gray-400">
+                <Globe className="h-5 w-5" />
+              </span>
+              <select
+                id="learningLanguages"
+                multiple
+                required
+                className="pl-10 pr-3 py-2 w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-600 transition"
+                value={formData.learningLanguages}
+                onChange={e => setFormData({ ...formData, learningLanguages: Array.from(e.target.selectedOptions, option => option.value) })}
+              >
                 {languages.map(lang => (
                   <option key={lang.value} value={lang.value}>
                     {lang.label}
