@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google';
 import { ThemeProvider } from '@/components/theme-provider'
 import { AuthProvider } from "@/providers/auth-provider"
 import './globals.css'
+import SpeedInsights from "@vercel/speed-insights"
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -30,6 +31,7 @@ export default function RootLayout({
               <main className="flex-1">
                 {children}
               </main>
+              {/* <SpeedInsights /> removed as it is not a valid JSX component */}
             </div>
           </AuthProvider>
         </ThemeProvider>
