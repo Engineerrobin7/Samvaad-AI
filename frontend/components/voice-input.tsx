@@ -3,6 +3,13 @@
 import { useState, useEffect } from "react"
 import { Mic, MicOff } from "lucide-react"
 
+declare global {
+  interface Window {
+    SpeechRecognition: typeof SpeechRecognition;
+    webkitSpeechRecognition: typeof SpeechRecognition;
+  }
+}
+
 export function VoiceInput({ onTranscript }: { onTranscript: (text: string) => void }) {
   const [isListening, setIsListening] = useState(false)
   const [recognition, setRecognition] = useState<any>(null)
