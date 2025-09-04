@@ -29,7 +29,8 @@
     "tailwind-merge": "^1.14.0",
     "tailwindcss-animate": "^1.0.7",
     "uuid": "^9.0.1",
-    "next-auth": "^4.22.1"
+    "next-auth": "^4.22.1",
+    "@vercel/analytics": "^1.2.2"
   },
   "devDependencies": {
     "@types/node": "^20.8.9",
@@ -42,6 +43,7 @@
     "rimraf": "^6.0.1",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.2.2",
-    "@types/uuid": "^9.0.2"
+    "@types/uuid": "^9.0.2",
+    "@vercel/analytics/dist/next/types": "^1.2.2"
   }
 }
