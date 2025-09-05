@@ -175,30 +175,6 @@ export default function SignupPage() {
               </select>
             </div>
           </div>
-          <div>
-            <label htmlFor="learningLanguages" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-              Languages You Want to Learn
-            </label>
-            <div className="relative">
-              <span className="absolute left-3 top-2.5 text-gray-400">
-                <Globe className="h-5 w-5" />
-              </span>
-              <select
-                id="learningLanguages"
-                multiple
-                required
-                className="pl-10 pr-3 py-2 w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-600 transition"
-                value={formData.learningLanguages}
-                onChange={e => setFormData({ ...formData, learningLanguages: Array.from(e.target.selectedOptions, option => option.value) })}
-              >
-                {languages.map(lang => (
-                  <option key={lang.value} value={lang.value}>
-                    {lang.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
           <button
             type="submit"
             className="w-full py-2 rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold shadow-md hover:from-blue-700 hover:to-purple-700 transition"
