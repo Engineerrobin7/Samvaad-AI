@@ -18,8 +18,7 @@ export default function SignupPage() {
     name: "",
     email: "",
     password: "",
-    nativeLanguage: "",
-    learningLanguages: []
+    preferred_language: ""
   })
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -51,12 +50,17 @@ export default function SignupPage() {
     e.preventDefault()
     setIsLoading(true)
     setError(null)
+    // Frontend validation for required fields
+    if (!formData.name || !formData.email || !formData.password || !formData.preferred_language) {
+      setError("Please fill in all fields.");
+      setIsLoading(false);
+      return;
+    }
     try {
       await register({
         name: formData.name,
         email: formData.email,
-        nativeLanguage: formData.nativeLanguage,
-        learningLanguages: formData.learningLanguages
+        preferred_language: formData.preferred_language
       }, formData.password)
     } catch (err: any) {
       setError(err.message || 'An error occurred');
@@ -152,14 +156,14 @@ export default function SignupPage() {
                 <Globe className="h-5 w-5" />
               </span>
               <select
-                id="nativeLanguage"
+                id="preferred_language"
                 required
                 className="pl-10 pr-3 py-2 w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-600 transition"
-                value={formData.nativeLanguage}
-                onChange={e => setFormData({ ...formData, nativeLanguage: e.target.value })}
+                value={formData.preferred_language}
+                onChange={e => setFormData({ ...formData, preferred_language: e.target.value })}
               >
                 <option value="" disabled>
-                  Select your native language
+                  Select your preferred language
                 </option>
                 {languages.map(lang => (
                   <option key={lang.value} value={lang.value}>
