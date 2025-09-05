@@ -158,6 +158,8 @@ export default function SignupPage() {
               <select
                 id="preferred_language"
                 required
+                title="Select your preferred language"
+                aria-label="Preferred Language"
                 className="pl-10 pr-3 py-2 w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-600 transition"
                 value={formData.preferred_language}
                 onChange={e => setFormData({ ...formData, preferred_language: e.target.value })}
