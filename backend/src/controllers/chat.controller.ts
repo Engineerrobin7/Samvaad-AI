@@ -6,20 +6,29 @@ import { pool } from '../db/pool';
  * Get chat history for a room
  * @route GET /api/chat/history/:roomId
  */
+// Pagination for chat history
 export const getChatHistory = async (req: Request, res: Response) => {
   try {
     const { roomId } = req.params;
-
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 20;
+    const offset = (page - 1) * limit;
     const { rows: messages } = await pool.query(
-      'SELECT * FROM chat_messages WHERE room_id = $1 ORDER BY created_at ASC',
+      'SELECT * FROM chat_messages WHERE room_id = $1 ORDER BY created_at ASC LIMIT $2 OFFSET $3',
+      [roomId, limit, offset]
+    );
+    const totalResult = await pool.query(
+      'SELECT COUNT(*) FROM chat_messages WHERE room_id = $1',
       [roomId]
     );
-
     return res.status(200).json({
       success: true,
       data: {
         roomId,
-        messages
+        messages,
+        total: parseInt(totalResult.rows[0].count),
+        page,
+        limit
       }
     });
   } catch (error) {
@@ -29,6 +38,63 @@ export const getChatHistory = async (req: Request, res: Response) => {
       message: 'Error getting chat history' 
     });
   }
+};
+
+// Delete a message
+export const deleteMessage = async (req: Request, res: Response) => {
+  const { messageId } = req.params;
+  try {
+    await pool.query('DELETE FROM chat_messages WHERE id = $1', [messageId]);
+    res.json({ success: true, message: 'Message deleted' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Failed to delete message' });
+  }
+};
+
+// Edit a message
+export const editMessage = async (req: Request, res: Response) => {
+  const { messageId } = req.params;
+  const { content } = req.body;
+  try {
+    await pool.query('UPDATE chat_messages SET content = $1, edited = true WHERE id = $2', [content, messageId]);
+    res.json({ success: true, message: 'Message edited' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Failed to edit message' });
+  }
+};
+
+// Search messages
+export const searchMessages = async (req: Request, res: Response) => {
+  const { roomId } = req.params;
+  const { query } = req.query;
+  try {
+    const result = await pool.query(
+      'SELECT * FROM chat_messages WHERE room_id = $1 AND content ILIKE $2 ORDER BY created_at ASC',
+      [roomId, `%${query}%`]
+    );
+    res.json({ success: true, messages: result.rows });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Failed to search messages' });
+  }
+};
+
+// Get unread message count
+export const getUnreadCount = async (req: Request, res: Response) => {
+  const { roomId, userId } = req.params;
+  try {
+    const result = await pool.query(
+      'SELECT COUNT(*) FROM chat_messages WHERE room_id = $1 AND created_at > (SELECT last_read FROM chat_room_users WHERE room_id = $1 AND user_id = $2)',
+      [roomId, userId]
+    );
+    res.json({ success: true, unread: parseInt(result.rows[0].count) });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Failed to get unread count' });
+  }
+};
+
+// Typing indicator (placeholder)
+export const setTyping = async (req: Request, res: Response) => {
+  res.json({ success: true, message: 'Typing indicator set (placeholder)' });
 };
 
 /**
