@@ -15,4 +15,9 @@ router.post('/', (req, res) => {
   res.json({ message: 'Chat message received!' });
 });
 
+router.post('/ai/chat', (req, res) => {
+  // Here you would add logic to process AI chat messages
+  res.json({ message: 'AI chat endpoint is working!' });
+});
+
 export default router;

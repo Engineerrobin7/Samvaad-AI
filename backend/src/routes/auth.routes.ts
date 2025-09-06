@@ -10,6 +10,15 @@ router.post('/register', (req, res) => {
 });
 
 // POST /api/auth/login - Login a user
-router.post('/login', authController.login);
+router.post('/login', (req, res) => {
+  // Placeholder for login logic
+  res.json({ message: "User login endpoint is working!" });
+});
+
+// GET /profile endpoint
+router.get('/profile', (req, res) => {
+  // Placeholder for profile retrieval logic
+  res.json({ message: "User profile endpoint is working!" });
+});
 
 export default router;
