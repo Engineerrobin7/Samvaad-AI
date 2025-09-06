@@ -14,8 +14,8 @@ export function Navbar() {
           <Link href="/translate" className="text-sm font-medium hover:underline underline-offset-4">
             Translate
           </Link>
-          <Link href="/learn" className="text-sm font-medium hover:underline underline-offset-4">
-            Learn
+          <Link href="/dashboard" className="text-sm font-medium hover:underline underline-offset-4">
+            Dashboard
           </Link>
           <ThemeToggle />
         </nav>
