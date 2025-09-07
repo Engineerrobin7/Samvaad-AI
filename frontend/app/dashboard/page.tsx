@@ -2,7 +2,12 @@ import React, { useEffect, useState } from "react";
 
 const Dashboard = () => {
   const [stats, setStats] = useState({ chats: 0, translations: 0, learnSessions: 0 });
-  const [recentChats, setRecentChats] = useState([]);
+  type RecentChat = {
+    context?: string;
+    message?: string;
+    [key: string]: any;
+  };
+  const [recentChats, setRecentChats] = useState<RecentChat[]>([]);
   const [loading, setLoading] = useState(true);
   const [recentLoading, setRecentLoading] = useState(true);
 
@@ -48,7 +53,17 @@ const Dashboard = () => {
               <li>No recent chats found.</li>
             ) : (
               recentChats.map((chat, idx) => (
-                <li key={idx}>{chat.message}</li>
+                <li key={idx}>
+                  <div>
+                    <strong>Context:</strong> {chat.context ? chat.context : "No context"}
+                  </div>
+                  <div>
+                    <span>{chat.message}</span>
+                    {chat.context && (
+                      <button className="continue-btn" onClick={() => window.location.href = `/chat?context=${encodeURIComponent(chat.context ?? "")}`}>Continue Conversation</button>
+                    )}
+                  </div>
+                </li>
               ))
             )}
           </ul>

@@ -27,6 +27,9 @@ export default function TranslatePage() {
   const [isLoading, setIsLoading] = useState(false);
   const [culturalContext, setCulturalContext] = useState('');
   const [formalityLevel, setFormalityLevel] = useState('neutral');
+  const [emotion, setEmotion] = useState('');
+  const [tone, setTone] = useState('');
+  const [imageToAudioLoading, setImageToAudioLoading] = useState(false);
   
   // Handle translation
   const handleTranslate = async () => {
@@ -63,7 +66,7 @@ export default function TranslatePage() {
           context: 'This is a standard Gujarati greeting with a neutral level of formality.'
         },
         kn: {
-          text: 'ನಮಸ್ಕಾರ, ನೀವು ಹೇಗಿದ್ದೀರಿ? ನಿಮ್ಮೊಂದಿಗೆ ಮಾತನಾಡಲು ಸಂತೋಷವಾಯಿತು.',
+          text: 'ನಮಸ್ಕಾರ, ನೀವು ಹೇಗಿದ್ದೀರಿ? ನಿಮ್ಮೊಂದಿಗೆ ಸಂತೋಷವಾಯಿತು.',
           context: 'This is a formal Kannada greeting using respectful forms, appropriate for most contexts.'
         },
         ml: {
@@ -85,6 +88,8 @@ export default function TranslatePage() {
       
       setTranslatedText(translation.text);
       setCulturalContext(translation.context);
+      setEmotion('Positive'); // Example: Detect emotion from translation
+      setTone('Friendly'); // Example: Detect tone from translation
       setIsLoading(false);
     }, 1500);
   };
@@ -240,6 +245,16 @@ export default function TranslatePage() {
             </div>
             
             <div className="space-y-4">
+              <label className="block text-sm font-medium mb-1">Translate from:</label>
+              <div className="flex gap-2">
+                <button className="rounded-md border px-3 py-1 text-sm shadow-sm hover:bg-muted" onClick={() => alert('Text input selected.')}>Text</button>
+                <button className="rounded-md border px-3 py-1 text-sm shadow-sm hover:bg-muted" onClick={() => alert('Image upload coming soon.')}>Image</button>
+                <button className="rounded-md border px-3 py-1 text-sm shadow-sm hover:bg-muted" onClick={() => alert('Audio recording coming soon.')}>Audio</button>
+              </div>
+              <input type="file" accept="image/*" className="mt-2" style={{display:'none'}} id="image-upload" />
+              <input type="file" accept="audio/*" className="mt-2" style={{display:'none'}} id="audio-upload" />
+            </div>
+              
               <div className="rounded-md border bg-muted/30 p-4 h-40 overflow-y-auto">
                 {isLoading ? (
                   <div className="flex items-center justify-center h-full">
@@ -252,6 +267,12 @@ export default function TranslatePage() {
                 ) : translatedText ? (
                   <div>
                     <p>{translatedText}</p>
+                    {emotion && (
+                      <p className="mt-2 text-sm text-muted-foreground">Emotion Detected: <span className="font-medium">{emotion}</span></p>
+                    )}
+                    {tone && (
+                      <p className="text-sm text-muted-foreground">Tone Detected: <span className="font-medium">{tone}</span></p>
+                    )}
                   </div>
                 ) : (
                   <div className="text-muted-foreground flex items-center justify-center h-full">
@@ -339,3 +360,35 @@ export default function TranslatePage() {
     </div>
   )
 }
+
+const handleImageToAudio = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  setImageToAudioLoading(true);
+  // Simulate OCR and TTS
+  // Replace with actual OCR and TTS API calls
+  setTimeout(() => {
+    const extractedText = "Simulated extracted text from image.";
+    setSourceText(extractedText);
+    // Simulate audio playback
+    const utterance = new window.SpeechSynthesisUtterance(extractedText);
+    window.speechSynthesis.speak(utterance);
+    setImageToAudioLoading(false);
+    alert("Image processed and audio played.");
+  }, 2000);
+};
+<input
+  type="file"
+  accept="image/*"
+  style={{ display: "none" }}
+  id="image-upload"
+  onChange={handleImageToAudio}
+/>
+<button
+  type="button"
+  className="px-2 py-1 rounded bg-blue-500 text-white"
+  onClick={() => document.getElementById("image-upload")?.click()}
+>
+  Image to Audio
+</button>
+{imageToAudioLoading && <span className="ml-2 text-sm text-gray-500">Processing image...</span>}
