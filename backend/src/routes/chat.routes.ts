@@ -1,6 +1,7 @@
 import express from 'express';
 import { getChatHistory, createChatRoom } from '../controllers/chat.controller';
 import { authenticate } from '../middleware/auth.middleware';
+import { upload, uploadAttachment } from '../controllers/chat.controller';
 
 const router = express.Router();
 
@@ -19,5 +20,8 @@ router.post('/ai/chat', (req, res) => {
   // Here you would add logic to process AI chat messages
   res.json({ message: 'AI chat endpoint is working!' });
 });
+
+// File/image upload endpoint
+router.post('/upload', authenticate, upload.single('file'), uploadAttachment);
 
 export default router;

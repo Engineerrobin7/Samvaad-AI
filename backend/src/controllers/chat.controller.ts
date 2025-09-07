@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { pool } from '../db/pool';
+import multer from 'multer';
+import path from 'path';
 
 /**
  * Get chat history for a room
@@ -143,5 +145,37 @@ export const createChatRoom = async (req: Request, res: Response) => {
       success: false, 
       message: 'Error creating chat room' 
     });
+  }
+};
+
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, path.join(__dirname, '../../uploads'));
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + '-' + file.originalname);
+  }
+});
+export const upload = multer({ storage });
+
+// Upload file/image and create chat message with attachment
+export const uploadAttachment = async (req: Request, res: Response) => {
+  try {
+    const { roomId, userId } = req.body;
+    const file = (req as any).file;
+    if (!file) {
+      return res.status(400).json({ success: false, message: 'No file uploaded' });
+    }
+    // Save file metadata and create chat message
+    const messageId = uuidv4();
+    const fileUrl = `/uploads/${file.filename}`;
+    await pool.query(
+      'INSERT INTO chat_messages (id, room_id, user_id, content, attachment_url, attachment_type, created_at) VALUES ($1, $2, $3, $4, $5, $6, NOW())',
+      [messageId, roomId, userId, '', fileUrl, file.mimetype]
+    );
+    res.status(201).json({ success: true, message: 'File uploaded', fileUrl });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Failed to upload file' });
   }
 };

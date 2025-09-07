@@ -17,7 +17,7 @@ const Dashboard = () => {
     fetch("/api/recent-chats")
       .then((res) => res.json())
       .then((data) => {
-        setRecentChats(data.recentChats || []);
+        setRecentChats(data.chats || []);
         setRecentLoading(false);
       })
       .catch(() => setRecentLoading(false));
