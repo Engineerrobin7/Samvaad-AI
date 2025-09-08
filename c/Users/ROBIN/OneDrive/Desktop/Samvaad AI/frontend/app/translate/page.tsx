@@ -30,67 +30,39 @@ export default function TranslatePage() {
   const [emotion, setEmotion] = useState('');
   const [tone, setTone] = useState('');
   const [imageToAudioLoading, setImageToAudioLoading] = useState(false);
+
   // Handle translation
   const handleTranslate = async () => {
     if (!sourceText.trim()) return;
-    
     setIsLoading(true);
-    
-    // Simulate API call for translation
-    setTimeout(() => {
-      // Mock translations based on target language
-      const translations = {
-        hi: {
-          text: 'नमस्ते, आप कैसे हैं? मुझे आपसे बात करके खुशी हुई।',
-          context: 'This is a formal Hindi greeting commonly used in professional settings. The use of "आप" indicates respect and formality.'
+    try {
+      const response = await fetch("/api/translate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
         },
-        bn: {
-          text: 'নমস্কার, আপনি কেমন আছেন? আপনার সাথে কথা বলে ভালো লাগলো।',
-          context: 'This is a standard Bengali greeting with a medium level of formality, appropriate for most social situations.'
-        },
-        ta: {
-          text: 'வணக்கம், நீங்கள் எப்படி இருக்கிறீர்கள்? உங்களுடன் பேசுவது மகிழ்ச்சியாக இருந்தது.',
-          context: 'This is a Tamil greeting using the formal "நீங்கள்" form, which shows respect to the listener.'
-        },
-        mr: {
-          text: 'नमस्कार, तुम्ही कसे आहात? तुमच्याशी बोलून आनंद झाला.',
-          context: 'This is a Marathi greeting using a semi-formal tone, appropriate for peers or casual acquaintances.'
-        },
-        te: {
-          text: 'నమస్కారం, మీరు ఎలా ఉన్నారు? మీతో మాట్లాడటం సంతోషంగా ఉంది.',
-          context: 'This is a formal Telugu greeting using respectful forms, suitable for most social and professional contexts.'
-        },
-        gu: {
-          text: 'નમસ્તે, તમે કેમ છો? તમારી સાથે વાત કરીને આનંદ થયો.',
-          context: 'This is a standard Gujarati greeting with a neutral level of formality.'
-        },
-        kn: {
-          text: 'ನಮಸ್ಕಾರ, ನೀವು ಹೇಗಿದ್ದೀರಿ? ನಿಮ್ಮೊಂದಿಗೆ ಸಂತೋಷವಾಯಿತು.',
-          context: 'This is a formal Kannada greeting using respectful forms, appropriate for most contexts.'
-        },
-        ml: {
-          text: 'നമസ്കാരം, സുഖമാണോ? നിങ്ങളോട് സംസാരിച്ചതിൽ സന്തോഷം.',
-          context: 'This is a Malayalam greeting with a neutral tone, commonly used in Kerala.'
-        },
-        pa: {
-          text: 'ਸਤ ਸ੍ਰੀ ਅਕਾਲ, ਤੁਸੀਂ ਕਿਵੇਂ ਹੋ? ਤੁਹਾਡੇ ਨਾਲ ਗੱਲ ਕਰਕੇ ਖੁਸ਼ੀ ਹੋਈ।',
-          context: 'This is a Punjabi greeting starting with "Sat Sri Akal", a traditional Sikh greeting that literally means "God is Truth".'
-        },
-        en: {
-          text: 'Hello, how are you? It was nice talking to you.',
-          context: 'This is a standard English greeting with a neutral level of formality.'
-        }
-      };
-      
-      // Get translation for target language
-      const translation = translations[targetLanguage as keyof typeof translations] || translations.en;
-      
-      setTranslatedText(translation.text);
-      setCulturalContext(translation.context);
-      setEmotion('Positive'); // Example: Detect emotion from translation
-      setTone('Friendly'); // Example: Detect tone from translation
+        body: JSON.stringify({
+          text: sourceText,
+          sourceLanguage,
+          targetLanguage,
+          formalityLevel
+        })
+      });
+      if (!response.ok) throw new Error("Translation failed");
+      const data = await response.json();
+      setTranslatedText(data.translatedText || "");
+      setCulturalContext(data.culturalContext || "");
+      setEmotion(data.emotion || "");
+      setTone(data.tone || "");
+    } catch (error) {
+      setTranslatedText("");
+      setCulturalContext("");
+      setEmotion("");
+      setTone("");
+      alert("Translation failed. Please try again.");
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
   };
 
   // Handle swapping languages
@@ -99,6 +71,21 @@ export default function TranslatePage() {
     setTargetLanguage(sourceLanguage);
     setSourceText(translatedText);
     setTranslatedText(sourceText);
+  };
+
+  // Handle image to audio (example logic)
+  const handleImageToAudio = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setImageToAudioLoading(true);
+    setTimeout(() => {
+      const extractedText = "Simulated extracted text from image.";
+      setSourceText(extractedText);
+      const utterance = new window.SpeechSynthesisUtterance(extractedText);
+      window.speechSynthesis.speak(utterance);
+      setImageToAudioLoading(false);
+      alert("Image processed and audio played.");
+    }, 2000);
   };
 
   return (
@@ -126,11 +113,9 @@ export default function TranslatePage() {
           </nav>
         </div>
       </header>
-      
       <main className="flex-1 container py-8">
         <div className="max-w-4xl mx-auto">
           <h1 className="text-3xl font-bold mb-6">Cultural Translation</h1>
-          
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
               <div className="flex items-center justify-between">
@@ -145,7 +130,6 @@ export default function TranslatePage() {
                     </option>
                   ))}
                 </select>
-                
                 <button 
                   onClick={handleSwapLanguages}
                   className="p-2 rounded-full hover:bg-muted"
@@ -155,7 +139,6 @@ export default function TranslatePage() {
                     <path d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4" />
                   </svg>
                 </button>
-                
                 <select 
                   value={targetLanguage}
                   onChange={(e) => setTargetLanguage(e.target.value)}
@@ -168,7 +151,6 @@ export default function TranslatePage() {
                   ))}
                 </select>
               </div>
-              
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label htmlFor="formality" className="block text-sm font-medium mb-1">
@@ -185,7 +167,6 @@ export default function TranslatePage() {
                     <option value="informal">Informal</option>
                   </select>
                 </div>
-                
                 <div>
                   <label htmlFor="context" className="block text-sm font-medium mb-1">
                     Context
@@ -202,7 +183,6 @@ export default function TranslatePage() {
                   </select>
                 </div>
               </div>
-              
               <div>
                 <textarea
                   value={sourceText}
@@ -211,7 +191,6 @@ export default function TranslatePage() {
                   className="w-full h-40 rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm"
                 />
               </div>
-              
               <div className="flex justify-between">
                 <button
                   onClick={() => setSourceText('')}
@@ -219,7 +198,6 @@ export default function TranslatePage() {
                 >
                   Clear
                 </button>
-                
                 <div className="flex gap-2">
                   <button
                     className="rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm hover:bg-muted"
@@ -231,7 +209,6 @@ export default function TranslatePage() {
                     </svg>
                     Voice
                   </button>
-                  
                   <button
                     onClick={handleTranslate}
                     disabled={isLoading || !sourceText.trim()}
@@ -242,7 +219,6 @@ export default function TranslatePage() {
                 </div>
               </div>
             </div>
-            
             <div className="space-y-4">
               <label className="block text-sm font-medium mb-1">Translate from:</label>
               <div className="flex gap-2">
@@ -250,10 +226,16 @@ export default function TranslatePage() {
                 <button className="rounded-md border px-3 py-1 text-sm shadow-sm hover:bg-muted" onClick={() => alert('Image upload coming soon.')}>Image</button>
                 <button className="rounded-md border px-3 py-1 text-sm shadow-sm hover:bg-muted" onClick={() => alert('Audio recording coming soon.')}>Audio</button>
               </div>
-              <input type="file" accept="image/*" className="mt-2" style={{display:'none'}} id="image-upload" />
+              <input type="file" accept="image/*" className="mt-2" style={{display:'none'}} id="image-upload" onChange={handleImageToAudio} />
               <input type="file" accept="audio/*" className="mt-2" style={{display:'none'}} id="audio-upload" />
-            </div>
-              
+              <button
+                type="button"
+                className="px-2 py-1 rounded bg-blue-500 text-white"
+                onClick={() => document.getElementById("image-upload")?.click()}
+              >
+                Image to Audio
+              </button>
+              {imageToAudioLoading && <span className="ml-2 text-sm text-gray-500">Processing image...</span>}
               <div className="rounded-md border bg-muted/30 p-4 h-40 overflow-y-auto">
                 {isLoading ? (
                   <div className="flex items-center justify-center h-full">
@@ -279,7 +261,6 @@ export default function TranslatePage() {
                   </div>
                 )}
               </div>
-              
               {culturalContext && (
                 <motion.div 
                   initial={{ opacity: 0, y: 10 }}
@@ -290,7 +271,6 @@ export default function TranslatePage() {
                   <p className="text-sm text-muted-foreground">{culturalContext}</p>
                 </motion.div>
               )}
-              
               <div className="flex justify-end gap-2">
                 <button
                   className="rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm hover:bg-muted"
@@ -301,7 +281,6 @@ export default function TranslatePage() {
                   </svg>
                   Save to Phrasebook
                 </button>
-                
                 <button
                   className="rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm hover:bg-muted"
                 >
@@ -313,7 +292,6 @@ export default function TranslatePage() {
               </div>
             </div>
           </div>
-          
           <div className="mt-8 rounded-lg border p-4 bg-muted/30">
             <h2 className="text-xl font-bold mb-4">Recently Learned Phrases</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -325,7 +303,6 @@ export default function TranslatePage() {
                 <p className="mt-1">नमस्ते, आप कैसे हैं?</p>
                 <p className="text-sm text-muted-foreground">Hello, how are you?</p>
               </div>
-              
               <div className="rounded-md border p-3 bg-background">
                 <div className="flex justify-between">
                   <span className="text-xs font-medium">Tamil</span>
@@ -334,7 +311,6 @@ export default function TranslatePage() {
                 <p className="mt-1">வணக்கம், எப்படி இருக்கிறீர்கள்?</p>
                 <p className="text-sm text-muted-foreground">Hello, how are you?</p>
               </div>
-              
               <div className="rounded-md border p-3 bg-background">
                 <div className="flex justify-between">
                   <span className="text-xs font-medium">Bengali</span>
@@ -343,49 +319,4 @@ export default function TranslatePage() {
                 <p className="mt-1">শুভ দুর্গা পূজা!</p>
                 <p className="text-sm text-muted-foreground">Happy Durga Puja!</p>
               </div>
-              
               <div className="rounded-md border p-3 bg-background">
-                <div className="flex justify-between">
-                  <span className="text-xs font-medium">Marathi</span>
-                  <span className="text-xs text-muted-foreground">Business</span>
-                </div>
-                <p className="mt-1">तुम्हाला भेटून आनंद झाला</p>
-                <p className="text-sm text-muted-foreground">Nice to meet you</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </main>
-    </div>
-  )
-}
-
-// Move handleImageToAudio inside the component and use hooks
-const handleImageToAudio = async (event: React.ChangeEvent<HTMLInputElement>) => {
-  const file = event.target.files?.[0];
-  if (!file) return;
-  setImageToAudioLoading(true);
-  setTimeout(() => {
-    const extractedText = "Simulated extracted text from image.";
-    setSourceText(extractedText);
-    const utterance = new window.SpeechSynthesisUtterance(extractedText);
-    window.speechSynthesis.speak(utterance);
-    setImageToAudioLoading(false);
-    alert("Image processed and audio played.");
-  }, 2000);
-};
-<input
-  type="file"
-  accept="image/*"
-  style={{ display: "none" }}
-  id="image-upload"
-  onChange={handleImageToAudio}
-/>
-<button
-  type="button"
-  className="px-2 py-1 rounded bg-blue-500 text-white"
-  onClick={() => document.getElementById("image-upload")?.click()}
->
-  Image to Audio
-</button>
-{imageToAudioLoading && <span className="ml-2 text-sm text-gray-500">Processing image...</span>}
