@@ -1,15 +1,98 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
-  provider = "prisma-client-js"
-  output   = "../generated/prisma"
+  provider        = "prisma-client-js"
+  output          = "../generated/prisma"
+  previewFeatures = ["multiSchema"]
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  schemas  = ["auth", "public"]
+}
+
+model UserProfile {
+  id                   String                 @id @default(cuid())
+  userId               String                 @unique // This will be the id from auth.users
+  name                 String?
+  userLessonProgresses UserLessonProgress[]
+  userQuizAttempts     UserQuizAttempt[]
+
+  @@schema("public")
+}
+
+model Language {
+  id      String   @id @default(cuid())
+  name    String   @unique
+  flag    String
+  lessons Lesson[]
+
+  @@schema("public")
+}
+
+model Lesson {
+  id                   String                 @id @default(cuid())
+  title                String
+  languageId           String
+  language             Language               @relation(fields: [languageId], references: [id])
+  duration             Int // Duration in minutes
+  userLessonProgresses UserLessonProgress[]
+  quiz                 Quiz?
+
+  @@schema("public")
+}
+
+model UserLessonProgress {
+  id          String      @id @default(cuid())
+  userProfileId String
+  userProfile UserProfile @relation(fields: [userProfileId], references: [id])
+  lessonId    String
+  lesson      Lesson      @relation(fields: [lessonId], references: [id])
+  completed   Boolean     @default(false)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@unique([userProfileId, lessonId])
+  @@schema("public")
+}
+
+model Quiz {
+  id               String            @id @default(cuid())
+  lessonId         String            @unique
+  lesson           Lesson            @relation(fields: [lessonId], references: [id])
+  questions        Question[]
+  userQuizAttempts UserQuizAttempt[]
+
+  @@schema("public")
+}
+
+model Question {
+  id      String   @id @default(cuid())
+  text    String
+  quizId  String
+  quiz    Quiz     @relation(fields: [quizId], references: [id])
+  choices Choice[]
+
+  @@schema("public")
+}
+
+model Choice {
+  id         String   @id @default(cuid())
+  text       String
+  isCorrect  Boolean
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id])
+
+  @@schema("public")
+}
+
+model UserQuizAttempt {
+  id            String      @id @default(cuid())
+  userProfileId String
+  userProfile   UserProfile @relation(fields: [userProfileId], references: [id])
+  quizId        String
+  quiz          Quiz        @relation(fields: [quizId], references: [id])
+  score         Float
+  completedAt   DateTime    @default(now())
+
+  @@schema("public")
 }
