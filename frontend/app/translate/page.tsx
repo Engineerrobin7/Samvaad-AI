@@ -254,7 +254,7 @@ export default function TranslatePage() {
               <input type="file" accept="audio/*" className="mt-2" style={{display:'none'}} id="audio-upload" />
             </div>
               
-              <div className="rounded-md border bg-muted/30 p-4 h-40 overflow-y-auto">
+              <div className="rounded-xl shadow-lg bg-white/90 dark:bg-gray-900/80 p-6 transition duration-300 hover:scale-105">
                 {isLoading ? (
                   <div className="flex items-center justify-center h-full">
                     <div className="flex space-x-2">
@@ -266,12 +266,6 @@ export default function TranslatePage() {
                 ) : translatedText ? (
                   <div>
                     <p>{translatedText}</p>
-                    {emotion && (
-                      <p className="mt-2 text-sm text-muted-foreground">Emotion Detected: <span className="font-medium">{emotion}</span></p>
-                    )}
-                    {tone && (
-                      <p className="text-sm text-muted-foreground">Tone Detected: <span className="font-medium">{tone}</span></p>
-                    )}
                   </div>
                 ) : (
                   <div className="text-muted-foreground flex items-center justify-center h-full">
