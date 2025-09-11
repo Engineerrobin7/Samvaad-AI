@@ -42,7 +42,7 @@ export default function Home() {
   useEffect(() => {
     const script = document.createElement('script')
     script.id = 'omnidimension-web-widget'
-    script.src = 'https://backend.omnidim.io/web_widget.js?secret_key=dacf3b077a129292507281ed8a74e135'
+    script.src = 'https://backend.omnidim.io/web_widget.js?secret_key=68609c52c477370fb2a6d32f41b24b2a'
     script.async = true
     document.body.appendChild(script)
 
