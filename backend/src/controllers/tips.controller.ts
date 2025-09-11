@@ -1,6 +1,6 @@
+// src/controllers/tips.controller.ts
 import { Request, Response } from 'express';
-import redisClient from '../config/redis';
-import { pool } from '../db/pool';
+import  pool  from '../db/pool';
 
 /**
  * Get cultural tips for a specific language
@@ -11,13 +11,6 @@ export const getCulturalTips = async (req: Request, res: Response) => {
     const { language } = req.params;
     const { category, difficulty } = req.query;
 
-    const cacheKey = `tips:cultural:${language}:${category || 'all'}:${difficulty || 'all'}`;
-    const cachedResult = await redisClient.get(cacheKey);
-
-    if (cachedResult) {
-      return res.status(200).json(JSON.parse(cachedResult));
-    }
-
     let query = 'SELECT * FROM cultural_tips WHERE language_code = $1';
     const params = [language];
 
@@ -27,9 +20,11 @@ export const getCulturalTips = async (req: Request, res: Response) => {
     }
 
     if (difficulty) {
-      query += ` AND difficulty = ${params.length + 1}`;
+      query += ` AND difficulty = $${params.length + 1}`;
       params.push(difficulty as string);
     }
+
+    query += ' ORDER BY title ASC';
 
     const { rows: tips } = await pool.query(query, params);
 
@@ -40,8 +35,6 @@ export const getCulturalTips = async (req: Request, res: Response) => {
         tips
       }
     };
-
-    await redisClient.set(cacheKey, JSON.stringify(result), { EX: 3600 });
 
     return res.status(200).json(result);
   } catch (error) {
@@ -62,13 +55,6 @@ export const getLanguageTips = async (req: Request, res: Response) => {
     const { language } = req.params;
     const { category, difficulty } = req.query;
 
-    const cacheKey = `tips:language:${language}:${category || 'all'}:${difficulty || 'all'}`;
-    const cachedResult = await redisClient.get(cacheKey);
-
-    if (cachedResult) {
-      return res.status(200).json(JSON.parse(cachedResult));
-    }
-
     let query = 'SELECT * FROM language_tips WHERE language_code = $1';
     const params = [language];
 
@@ -78,9 +64,11 @@ export const getLanguageTips = async (req: Request, res: Response) => {
     }
 
     if (difficulty) {
-      query += ` AND difficulty = ${params.length + 1}`;
+      query += ` AND difficulty = $${params.length + 1}`;
       params.push(difficulty as string);
     }
+
+    query += ' ORDER BY title ASC';
 
     const { rows: tips } = await pool.query(query, params);
 
@@ -91,8 +79,6 @@ export const getLanguageTips = async (req: Request, res: Response) => {
         tips
       }
     };
-
-    await redisClient.set(cacheKey, JSON.stringify(result), { EX: 3600 });
 
     return res.status(200).json(result);
   } catch (error) {

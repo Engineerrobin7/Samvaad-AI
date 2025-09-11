@@ -1,16 +1,24 @@
+// src/index.ts
 import express from 'express';
 import http from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
 import { config } from 'dotenv';
+import path from 'path';
+import fs from 'fs';
+
+// Import routes
 import authRoutes from './routes/auth.routes';
 import chatRoutes from './routes/chat.routes';
 import tipsRoutes from './routes/tips.routes';
 import aiRoutes from './routes/ai.routes';
-import faqRoutes from './routes/faq.routes';
-import translateRoutes from './routes/translate.routes';
+import learnRoutes from './routes/learn.routes';
+
+// Import socket handlers
 import { setupSocketHandlers } from './socket';
-import { connectRedis } from './config/redis';
+
+// Import DB pool
+import pool from './db/pool';
 
 // Load environment variables
 config();
@@ -21,58 +29,94 @@ const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
     origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-    methods: ['GET', 'POST'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
     credentials: true
   }
 });
 
 // Middleware
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(cors({
+  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  credentials: true
+}));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Static file serving for uploads
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
+// Create uploads directory if it doesn't exist
+const uploadsDir = path.join(__dirname, '../uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
 
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/tips', tipsRoutes);
 app.use('/api/ai', aiRoutes);
-app.use('/api/faq', faqRoutes);
-app.use('/api/translate', translateRoutes);
+app.use('/api/learn', learnRoutes);
 
-app.get('/api/auth', (req, res) => { res.json({ message: 'Auth route is working!' }); });
-app.get('/api/chat', (req, res) => { res.json({ message: 'Chat route is working!' }); });
-app.get('/api/tips', (req, res) => { res.json({ message: 'Tips route is working!' }); });
-app.get('/api/ai', (req, res) => { res.json({ message: 'AI route is working!' }); });
-app.get('/api/faq', (req, res) => { res.json({ message: 'FAQ route is working!' }); });
-app.get('/api/translate', (req, res) => { res.json({ message: 'Translate route is working!' }); });
-app.use(cors({ origin: 'http://localhost:3000', credentials: true }));
 // Health check endpoint
 app.get('/', (req, res) => {
   res.json({
     message: 'Welcome to Samvaad AI Backend!',
+    version: '2.0.0',
+    features: [
+      'Gemini-powered AI translation with cultural context',
+      'Real-time multilingual chat',
+      'Comprehensive language learning system',
+      'Cultural and language tips',
+      'Image-to-text translation'
+    ],
     availableRoutes: [
-      '/api/auth',
-      '/api/chat',
-      '/api/tips',
-      '/api/ai',
-      '/api/faq',
-      '/api/translate',
-      '/api/health'
+      '/api/auth - Authentication endpoints',
+      '/api/chat - Real-time chat functionality',
+      '/api/tips - Cultural and language tips',
+      '/api/ai - AI-powered translation and chat',
+      '/api/learn - Language learning system',
+      '/api/health - Health status check'
     ]
   });
 });
+
 app.get('/api/health', (req, res) => {
   res.status(200).json({
     status: 'ok',
     message: 'Samvaad AI API is running',
     timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development',
+    features: {
+      geminiAI: !!process.env.GEMINI_API_KEY,
+      database: true,
+      fileUploads: true,
+      socketIO: true
+    }
+  });
+});
+
+// Error handling middleware
+app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error('Unhandled error:', err);
+  res.status(500).json({
+    success: false,
+    message: 'Internal server error',
+    error: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong'
+  });
+});
+
+// 404 handler
+app.use('*', (req, res) => {
+  res.status(404).json({
+    success: false,
+    message: 'Route not found',
     availableRoutes: [
       '/api/auth',
       '/api/chat',
       '/api/tips',
       '/api/ai',
-      '/api/faq',
-      '/api/translate',
+      '/api/learn',
       '/api/health'
     ]
   });
@@ -85,10 +129,28 @@ setupSocketHandlers(io);
 const PORT = process.env.PORT || 5000;
 
 const startServer = async () => {
-  await connectRedis();
-  server.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-  });
+  try {
+    // Test database connection
+    await pool.query('SELECT 1');
+    console.log('✅ Database connection successful');
+
+    server.listen(PORT, () => {
+      console.log(`🚀 Samvaad AI Backend running on port ${PORT}`);
+      console.log(`🌐 Health check: http://localhost:${PORT}/api/health`);
+      console.log(`📚 API docs: http://localhost:${PORT}/`);
+      console.log(`🔧 Environment: ${process.env.NODE_ENV || 'development'}`);
+
+      // Log feature availability
+      console.log('\n📋 Feature Status:');
+      console.log(`   Gemini AI: ${process.env.GEMINI_API_KEY ? '✅ Enabled' : '❌ Missing API Key'}`);
+      console.log(`   Database: ✅ Connected`);
+      console.log(`   File Uploads: ✅ Enabled`);
+      console.log(`   Socket.IO: ✅ Enabled`);
+    });
+  } catch (error) {
+    console.error('❌ Failed to start server:', error);
+    process.exit(1);
+  }
 };
 
 startServer();
