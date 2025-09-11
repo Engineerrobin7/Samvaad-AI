@@ -1,3 +1,4 @@
+// src/db/setup.ts
 import fs from 'fs';
 import path from 'path';
 import { Pool } from 'pg';
@@ -46,6 +47,53 @@ async function insertDemoData(pool: Pool) {
     ON CONFLICT (email) DO NOTHING;
   `);
 
+  // Insert languages
+  await pool.query(`
+    INSERT INTO languages (code, name, native_name, difficulty_level, description, is_active)
+    VALUES 
+      ('hi', 'Hindi', 'हिन्दी', 'beginner', 'The most widely spoken language in India, official language of the country.', true),
+      ('bn', 'Bengali', 'বাংলা', 'intermediate', 'Spoken in West Bengal and Bangladesh, rich literary tradition.', true),
+      ('te', 'Telugu', 'తెలుగు', 'intermediate', 'Classical language of South India, spoken in Andhra Pradesh and Telangana.', true),
+      ('ta', 'Tamil', 'தமிழ்', 'advanced', 'Ancient Dravidian language with rich literature, spoken in Tamil Nadu.', true),
+      ('gu', 'Gujarati', 'ગુજરાતી', 'beginner', 'Language of Gujarat state, known for its business community.', true),
+      ('mr', 'Marathi', 'मराठी', 'intermediate', 'Language of Maharashtra, rich cultural heritage.', true)
+    ON CONFLICT (code) DO NOTHING;
+  `);
+
+  // Insert sample courses
+  await pool.query(`
+    INSERT INTO courses (language_id, title, description, difficulty_level, estimated_duration, order_index, is_active)
+    VALUES 
+      (1, 'Hindi Basics', 'Learn fundamental Hindi words and phrases for everyday communication.', 'beginner', 480, 1, true),
+      (1, 'Hindi Grammar', 'Understand Hindi sentence structure and grammatical rules.', 'intermediate', 720, 2, true),
+      (1, 'Hindi Culture', 'Explore Hindi culture, traditions, and cultural context.', 'intermediate', 360, 3, true),
+      (2, 'Bengali Fundamentals', 'Basic Bengali vocabulary and pronunciation guide.', 'beginner', 540, 1, true),
+      (2, 'Bengali Literature', 'Introduction to Bengali literary traditions and famous works.', 'advanced', 600, 2, true),
+      (3, 'Telugu Basics', 'Essential Telugu phrases for travelers and beginners.', 'beginner', 420, 1, true),
+      (4, 'Tamil Essentials', 'Core Tamil vocabulary and cultural insights.', 'beginner', 480, 1, true),
+      (5, 'Gujarati for Business', 'Business-focused Gujarati language course.', 'intermediate', 360, 1, true)
+    ON CONFLICT DO NOTHING;
+  `);
+
+  // Insert sample lessons for Hindi Basics course
+  await pool.query(`
+    INSERT INTO lessons (course_id, title, description, content, lesson_type, order_index, estimated_duration, is_active)
+    VALUES 
+      (1, 'Introduction to Hindi', 'Learn about Hindi language and its importance', 
+       '{"sections": [{"type": "text", "content": "Hindi is the most widely spoken language in India..."}]}', 
+       'text', 1, 30, true),
+      (1, 'Basic Greetings', 'Common Hindi greetings and polite expressions', 
+       '{"sections": [{"type": "vocabulary", "items": [{"hindi": "नमस्ते", "english": "Hello", "pronunciation": "Namaste"}]}]}', 
+       'vocabulary', 2, 45, true),
+      (1, 'Numbers 1-10', 'Learn to count from 1 to 10 in Hindi', 
+       '{"sections": [{"type": "vocabulary", "items": [{"hindi": "एक", "english": "One", "pronunciation": "Ek"}]}]}', 
+       'vocabulary', 3, 40, true),
+      (1, 'Family Members', 'Hindi words for family relationships', 
+       '{"sections": [{"type": "vocabulary", "items": [{"hindi": "माता", "english": "Mother", "pronunciation": "Mata"}]}]}', 
+       'vocabulary', 4, 35, true)
+    ON CONFLICT DO NOTHING;
+  `);
+
   // Insert demo chat rooms
   await pool.query(`
     INSERT INTO chat_rooms (id, name, primary_language, created_by)
@@ -72,7 +120,7 @@ async function insertDemoData(pool: Pool) {
 
   // Insert demo chat messages
   await pool.query(`
-    INSERT INTO chat_messages (room_id, user_id, message, original_language)
+    INSERT INTO chat_messages (room_id, user_id, content, original_language)
     VALUES 
       ('room-1', 1, 'Hello everyone! I am learning Hindi.', 'en'),
       ('room-1', 2, 'नमस्ते! मैं आपकी मदद कर सकता हूँ।', 'hi'),
@@ -81,7 +129,29 @@ async function insertDemoData(pool: Pool) {
     ON CONFLICT DO NOTHING;
   `);
 
-  // Insert demo language proficiency
+  // Insert demo user progress
+  await pool.query(`
+    INSERT INTO user_course_progress (user_id, course_id, progress_percentage, is_completed)
+    VALUES 
+      (1, 1, 75.00, false),
+      (1, 4, 100.00, true),
+      (2, 1, 25.00, false),
+      (3, 4, 50.00, false)
+    ON CONFLICT (user_id, course_id) DO NOTHING;
+  `);
+
+  // Insert demo lesson progress
+  await pool.query(`
+    INSERT INTO user_lesson_progress (user_id, lesson_id, is_completed, score, completed_at)
+    VALUES 
+      (1, 1, true, 95, NOW() - INTERVAL '2 days'),
+      (1, 2, true, 88, NOW() - INTERVAL '1 day'),
+      (1, 3, true, 92, NOW() - INTERVAL '6 hours'),
+      (2, 1, true, 85, NOW() - INTERVAL '3 days')
+    ON CONFLICT (user_id, lesson_id) DO NOTHING;
+  `);
+
+  // Insert language proficiency
   await pool.query(`
     INSERT INTO language_proficiency (user_id, language_code, proficiency_level, experience_points)
     VALUES 
@@ -92,30 +162,28 @@ async function insertDemoData(pool: Pool) {
     ON CONFLICT (user_id, language_code) DO NOTHING;
   `);
 
-  // Insert demo cultural tips
+  // Insert cultural tips
   await pool.query(`
     INSERT INTO cultural_tips (id, language_code, title, content, category, difficulty)
     VALUES
       ('hi-1', 'hi', 'Greeting Etiquette', 'In Hindi culture, "Namaste" with folded hands is a respectful greeting for all ages and social statuses.', 'social', 'beginner'),
-      ('hi-2', 'hi', 'Formal vs Informal Speech', 'Hindi has three levels of formality: "आप" (aap) for formal/respectful, "तुम" (tum) for friends/family, and "तू" (tu) for very close relationships or children.', 'language', 'intermediate'),
-      ('hi-3', 'hi', 'Festival Greetings', 'During Diwali, say "Diwali ki Shubhkamnayein" (दिवाली की शुभकामनाएं) for formal wishes or "Happy Diwali" in casual settings.', 'festivals', 'beginner'),
-      ('bn-1', 'bn', 'Bengali Greetings', 'In Bengali culture, "Nomoshkar" (নমস্কার) with folded hands is the traditional greeting, while "Kemon acho?" (কেমন আছো?) means "How are you?"', 'social', 'beginner'),
+      ('hi-2', 'hi', 'Formal vs Informal Speech', 'Hindi has three levels of formality: "आप" (aap) for formal/respectful, "तुम" (tum) for friends/family, and "तू" (tu) for very close relationships.', 'language', 'intermediate'),
+      ('hi-3', 'hi', 'Festival Greetings', 'During Diwali, say "Diwali ki Shubhkamnayein" (दिवाली की शुभकामनाएं) for formal wishes.', 'festivals', 'beginner'),
+      ('bn-1', 'bn', 'Bengali Greetings', 'In Bengali culture, "Nomoshkar" (নমস্কার) with folded hands is the traditional greeting.', 'social', 'beginner'),
       ('bn-2', 'bn', 'Respect for Elders', 'Bengali culture places high importance on respecting elders. Address older people with "apni" (আপনি) rather than "tumi" (তুমি).', 'social', 'beginner'),
-      ('te-1', 'te', 'Telugu Greetings', 'In Telugu, "Namaskaram" (నమస్కారం) is a formal greeting, while "Baagunnara?" (బాగున్నారా?) means "How are you?"', 'social', 'beginner'),
-      ('te-2', 'te', 'Telugu Festivals', 'During Sankranti, a major harvest festival, Telugu people exchange "Sankranti Shubhakankshalu" (సంక్రాంతి శుభాకాంక్షలు) as greetings.', 'festivals', 'intermediate')
+      ('te-1', 'te', 'Telugu Greetings', 'In Telugu, "Namaskaram" (నమస్కారం) is a formal greeting, while "Baagunnara?" (బాగున్నారా?) means "How are you?"', 'social', 'beginner')
     ON CONFLICT (id) DO NOTHING;
   `);
 
-  // Insert demo language learning tips
+  // Insert language learning tips
   await pool.query(`
     INSERT INTO language_tips (id, language_code, title, content, category, difficulty)
     VALUES
       ('hi-lang-1', 'hi', 'Hindi Pronunciation', 'Hindi has retroflex consonants (ट, ठ, ड, ढ) that are pronounced with the tongue curled back.', 'pronunciation', 'beginner'),
       ('hi-lang-2', 'hi', 'Hindi Sentence Structure', 'Hindi follows Subject-Object-Verb order, unlike English which uses Subject-Verb-Object.', 'grammar', 'intermediate'),
       ('bn-lang-1', 'bn', 'Bengali Vowels', 'Bengali has 7 vowels with both oral and nasal forms, making pronunciation challenging for beginners.', 'pronunciation', 'intermediate'),
-      ('bn-lang-2', 'bn', 'Bengali Script', 'Bengali script is derived from the eastern Nagari script and has rounded shapes due to the traditional writing materials used.', 'writing', 'beginner'),
-      ('te-lang-1', 'te', 'Telugu Alphabet', 'Telugu has 56 letters: 16 vowels, 3 vowel modifiers, and 37 consonants.', 'writing', 'beginner'),
-      ('te-lang-2', 'te', 'Telugu Pronunciation', 'Telugu distinguishes between short and long vowels, which can change the meaning of words.', 'pronunciation', 'intermediate')
+      ('bn-lang-2', 'bn', 'Bengali Script', 'Bengali script is derived from the eastern Nagari script and has rounded shapes.', 'writing', 'beginner'),
+      ('te-lang-1', 'te', 'Telugu Alphabet', 'Telugu has 56 letters: 16 vowels, 3 vowel modifiers, and 37 consonants.', 'writing', 'beginner')
     ON CONFLICT (id) DO NOTHING;
   `);
 }

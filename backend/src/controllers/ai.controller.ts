@@ -1,124 +1,229 @@
+// src/controllers/ai.controller.ts
 import { Request, Response } from 'express';
-import OpenAI from 'openai';
-import { GoogleGenerativeAI, ChatSession } from '@google/generative-ai';
-import { pool } from '../db/pool';
+import  pool from '../db/pool';
+import { aiService } from '../services/ai.service';
+import multer from 'multer';
+import path from 'path';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'uploads/');
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + '-' + file.originalname);
+  }
 });
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
+export const upload = multer({ 
+  storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/bmp', 'image/webp'];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid file type. Only images are allowed.'));
+    }
+  }
+});
 
-// In-memory store for conversation history
-const conversationStore: { [key: string]: any } = {};
+/**
+ * Translate text with cultural context
+ * @route POST /api/ai/translate
+ */
+export const translateText = async (req: Request, res: Response) => {
+  try {
+    const { text, sourceLanguage, targetLanguage, formalityLevel } = req.body;
+    const userId = (req as any).user?.id;
 
-const FALLBACK_PHRASE = "I'm sorry, but I cannot assist with that.";
+    if (!text || !sourceLanguage || !targetLanguage) {
+      return res.status(400).json({
+        success: false,
+        message: 'Text, source language, and target language are required'
+      });
+    }
 
-// Multilingual Chat Endpoint (OpenAI)
+    const result = await aiService.translateText(text, sourceLanguage, targetLanguage, formalityLevel);
+
+    // Log translation for analytics
+    if (userId) {
+      try {
+        await pool.query(
+          'INSERT INTO ai_conversation_logs (conversation_id, user_id, model, message, reply, language) VALUES ($1, $2, $3, $4, $5, $6)',
+          [`translate-${Date.now()}`, userId, 'gemini-translate', text, result.translation, targetLanguage]
+        );
+      } catch (logError) {
+        console.error('Failed to log translation:', logError);
+      }
+    }
+
+    res.json({
+      success: true,
+      data: {
+        originalText: text,
+        translatedText: result.translation,
+        sourceLanguage,
+        targetLanguage,
+        formalityLevel,
+        culturalContext: result.culturalContext
+      }
+    });
+  } catch (error) {
+    console.error('Translation error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Translation failed',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+};
+
+/**
+ * Translate image with cultural context
+ * @route POST /api/ai/translate-image
+ */
+export const translateImage = async (req: Request, res: Response) => {
+  try {
+    const { targetLanguage } = req.body;
+    const userId = (req as any).user?.id;
+    const file = req.file;
+
+    if (!file) {
+      return res.status(400).json({
+        success: false,
+        message: 'Image file is required'
+      });
+    }
+
+    if (!targetLanguage) {
+      return res.status(400).json({
+        success: false,
+        message: 'Target language is required'
+      });
+    }
+
+    const result = await aiService.translateImage(file.path, targetLanguage);
+
+    // Log image translation for analytics
+    if (userId) {
+      try {
+        await pool.query(
+          'INSERT INTO ai_conversation_logs (conversation_id, user_id, model, message, reply, language) VALUES ($1, $2, $3, $4, $5, $6)',
+          [`image-translate-${Date.now()}`, userId, 'gemini-vision', result.extractedText, result.translation, targetLanguage]
+        );
+      } catch (logError) {
+        console.error('Failed to log image translation:', logError);
+      }
+    }
+
+    res.json({
+      success: true,
+      data: {
+        extractedText: result.extractedText,
+        translatedText: result.translation,
+        targetLanguage,
+        culturalContext: result.culturalContext
+      }
+    });
+  } catch (error) {
+    console.error('Image translation error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Image translation failed',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+};
+
+/**
+ * Chat with AI assistant
+ * @route POST /api/ai/chat
+ */
 export const chatWithAI = async (req: Request, res: Response) => {
   try {
     const { messages, language, conversationId } = req.body;
     const userId = (req as any).user?.id;
-    const systemPrompt = `You are a helpful multilingual assistant. Reply in ${language}. If you cannot answer, say '${FALLBACK_PHRASE}'`;
 
-    let history = conversationStore[conversationId] || [{ role: 'system', content: systemPrompt }];
-
-    history = [...history, ...messages];
-
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-3.5-turbo',
-      messages: history,
-    });
-
-    const reply = completion.choices[0].message?.content;
-    history.push({ role: 'assistant', content: reply });
-    conversationStore[conversationId] = history;
-
-    // Log conversation
-    if (reply) {
-      await pool.query(
-        'INSERT INTO ai_conversation_logs (conversation_id, user_id, model, message, reply, language) VALUES ($1, $2, $3, $4, $5, $6)',
-        [conversationId, userId, 'openai', messages[messages.length - 1].content, reply, language]
-      );
-    }
-
-    // Human fallback
-    if (!reply || reply.includes(FALLBACK_PHRASE)) {
-      await pool.query('INSERT INTO human_escalations (conversation_id) VALUES ($1)', [conversationId]);
-    }
-
-    res.json({ reply, conversationId });
-  } catch (error) {
-    res.status(500).json({ error: 'AI chat failed', details: error });
-  }
-};
-
-// Multilingual Chat Endpoint (Gemini)
-export const chatWithGemini = async (req: Request, res: Response) => {
-  try {
-    const { messages, language, conversationId } = req.body;
-    const userId = (req as any).user?.id;
-    const model = genAI.getGenerativeModel({ model: "gemini-pro"});
-    const systemPrompt = `You are a helpful multilingual assistant. Reply in ${language}. If you cannot answer, say '${FALLBACK_PHRASE}'`;
-
-    let chat: ChatSession;
-    if (conversationStore[conversationId]) {
-      chat = conversationStore[conversationId];
-    } else {
-      chat = model.startChat({
-        history: [
-          {
-            role: "user",
-            parts: [{ text: systemPrompt }],
-          },
-          {
-            role: "model",
-            parts: [{ text: "Okay, I will act as a multilingual assistant." }],
-          },
-        ],
-        generationConfig: {
-          maxOutputTokens: 100,
-        },
+    if (!messages || !Array.isArray(messages) || messages.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Messages array is required'
       });
-      conversationStore[conversationId] = chat;
     }
 
-    const lastMessage = messages[messages.length - 1].content;
-    const result = await chat.sendMessage(lastMessage);
-    const response = await result.response;
-    const text = response.text();
-
-    // Log conversation
-    await pool.query(
-      'INSERT INTO ai_conversation_logs (conversation_id, user_id, model, message, reply, language) VALUES ($1, $2, $3, $4, $5, $6)',
-      [conversationId, userId, 'gemini', lastMessage, text, language]
-    );
-
-    // Human fallback
-    if (!text || text.includes(FALLBACK_PHRASE)) {
-      await pool.query('INSERT INTO human_escalations (conversation_id) VALUES ($1)', [conversationId]);
+    if (!conversationId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Conversation ID is required'
+      });
     }
 
-    res.json({ reply: text, conversationId });
+    const chatConfig = {
+      language: language || 'en',
+      conversationId
+    };
+
+    const reply = await aiService.chatWithAI(chatConfig, messages);
+
+    // Log conversation for analytics
+    if (userId) {
+      try {
+        const lastMessage = messages[messages.length - 1];
+        await pool.query(
+          'INSERT INTO ai_conversation_logs (conversation_id, user_id, model, message, reply, language) VALUES ($1, $2, $3, $4, $5, $6)',
+          [conversationId, userId, 'gemini-chat', lastMessage.content, reply, language || 'en']
+        );
+      } catch (logError) {
+        console.error('Failed to log chat:', logError);
+      }
+    }
+
+    res.json({
+      success: true,
+      data: {
+        reply,
+        conversationId
+      }
+    });
   } catch (error) {
-    res.status(500).json({ error: 'Gemini chat failed', details: error });
+    console.error('Chat error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Chat failed',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
   }
 };
 
-
-// Translation Endpoint
-export const translateWithAI = async (req: Request, res: Response) => {
+/**
+ * Clear chat conversation
+ * @route DELETE /api/ai/chat/:conversationId
+ */
+export const clearChat = async (req: Request, res: Response) => {
   try {
-    const { text, from, to } = req.body;
-    const prompt = `Translate the following text from ${from} to ${to}: "${text}"`;
+    const { conversationId } = req.params;
 
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-3.5-turbo',
-      messages: [{ role: 'user', content: prompt }],
+    if (!conversationId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Conversation ID is required'
+      });
+    }
+
+    aiService.clearConversation(conversationId);
+
+    res.json({
+      success: true,
+      message: 'Conversation cleared'
     });
-
-    res.json({ translation: completion.choices[0].message?.content });
   } catch (error) {
-    res.status(500).json({ error: 'Translation failed', details: error });
+    console.error('Clear chat error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to clear conversation'
+    });
   }
 };

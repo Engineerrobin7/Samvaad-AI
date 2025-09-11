@@ -1,33 +1,49 @@
 import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
+import { verifyToken } from '@clerk/express';
+import pool from '../db/pool';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'samvaad-ai-secret-key';
+export const authenticate = async (req: Request, res: Response, next: NextFunction) => {
+  const authHeader = req.headers.authorization;
 
-export const authenticate = (req: Request, res: Response, next: NextFunction) => {
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ message: 'Authentication required. No token provided.' });
+  }
+
+  const token = authHeader.split(' ')[1];
+
   try {
-    // Get token from header
-    const authHeader = req.headers.authorization;
-    
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({
-        success: false,
-        message: 'Authentication required. No token provided.'
+    // ✅ Verify token with Clerk
+    const payload = await verifyToken(token, {
+      secretKey: process.env.CLERK_SECRET_KEY!,  // add this in your .env
+    });
+
+    const clerkUserId = payload.sub;
+
+    if (!clerkUserId) {
+      return res.status(401).json({ message: 'Invalid token' });
+    }
+
+    // ✅ Lookup local user in DB
+    const userResult = await pool.query(
+      'SELECT id FROM users WHERE clerk_id = $1',
+      [clerkUserId]
+    );
+
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({
+        message: 'User not found in local database. Please sync.',
       });
     }
-    
-    const token = authHeader.split(' ')[1];
-    
-    // Verify token
-    const decoded = jwt.verify(token, JWT_SECRET);
-    
-    // Add user to request
-    (req as any).user = decoded;
-    
+
+    // Attach your internal user ID to the request
+    (req as any).user = {
+      id: userResult.rows[0].id, // Your internal DB user ID
+      clerkId: clerkUserId,
+    };
+
     next();
   } catch (error) {
-    return res.status(401).json({
-      success: false,
-      message: 'Invalid or expired token'
-    });
+    console.error('Authentication error:', error);
+    return res.status(401).json({ message: 'Invalid or expired token' });
   }
 };

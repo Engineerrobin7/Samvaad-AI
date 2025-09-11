@@ -1,24 +1,13 @@
 import express from 'express';
 import { authController } from '../controllers/auth.controller';
+import { authenticate } from '../middleware/auth.middleware';
 
 const router = express.Router();
 
-// POST /api/auth/register - Register a new user
-router.post('/register', (req, res) => {
-  // Registration logic would go here
-  res.json({ message: 'User registration endpoint is working!' });
-});
+// POST /api/auth/sync - Creates a user in our DB after they sign up with Clerk
+router.post('/sync', authController.syncUser);
 
-// POST /api/auth/login - Login a user
-router.post('/login', (req, res) => {
-  // Placeholder for login logic
-  res.json({ message: "User login endpoint is working!" });
-});
-
-// GET /profile endpoint
-router.get('/profile', (req, res) => {
-  // Placeholder for profile retrieval logic
-  res.json({ message: "User profile endpoint is working!" });
-});
+// GET /api/auth/profile - Gets the current user's profile
+router.get('/profile', authenticate, authController.getProfile);
 
 export default router;

@@ -1,72 +1,55 @@
 import { Request, Response } from 'express';
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-import { pool } from '../db/pool';
-
-const JWT_SECRET = process.env.JWT_SECRET || 'samvaad-ai-secret-key';
-
+import { clerkClient } from '@clerk/express';
+import pool from '../db/pool';
 export const authController = {
-  async register(req: Request, res: Response) {
+  // Syncs Clerk user with your local database
+  async syncUser(req: Request, res: Response) {
     try {
-      const { email, password, name, preferred_language } = req.body;
+      const { clerkId, email, name, preferred_language } = req.body;
 
-      // Check if user already exists
-      const userExists = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
-      if (userExists.rows.length > 0) {
-        return res.status(400).json({ message: 'User already exists' });
+      if (!clerkId || !email || !name) {
+        return res.status(400).json({ message: 'Missing required user data for sync' });
       }
 
-      // Hash password
-      const salt = await bcrypt.genSalt(10);
-      const hashedPassword = await bcrypt.hash(password, salt);
+      // Check if user already exists
+      const userExists = await pool.query('SELECT * FROM users WHERE clerk_id = $1', [clerkId]);
+      
+      if (userExists.rows.length > 0) {
+        // User exists, return their data
+        const user = userExists.rows[0];
+        return res.status(200).json({ message: 'User already synced', user });
+      }
 
-      // Create user
-      const newUser = await pool.query(
-        'INSERT INTO users (name, email, password, preferred_language) VALUES ($1, $2, $3, $4) RETURNING *',
-        [name, email, hashedPassword, preferred_language]
-      );
+      // If user does not exist, create them
+      const newUserQuery = `
+        INSERT INTO users (clerk_id, email, name, preferred_language) 
+        VALUES ($1, $2, $3, $4) 
+        RETURNING *
+      `;
+      const newUser = await pool.query(newUserQuery, [clerkId, email, name, preferred_language || 'en']);
 
-      const user = newUser.rows[0];
+      res.status(201).json({ message: 'User synced successfully', user: newUser.rows[0] });
 
-      // Create token
-      const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, {
-        expiresIn: '7d',
-      });
-
-      res.status(201).json({ user, token });
     } catch (error) {
-      console.error('Registration error:', error);
-      res.status(500).json({ message: 'Server error' });
+      console.error('User sync error:', error);
+      res.status(500).json({ message: 'Server error during user sync' });
     }
   },
 
-  async login(req: Request, res: Response) {
+  // Get current user's profile
+  async getProfile(req: Request, res: Response) {
     try {
-      const { email, password } = req.body;
+        const userId = (req as any).user?.id;
+        const userResult = await pool.query('SELECT id, clerk_id, name, email, preferred_language, points, level FROM users WHERE id = $1', [userId]);
 
-      // Check if user exists
-      const userResult = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
-      if (userResult.rows.length === 0) {
-        return res.status(400).json({ message: 'Invalid credentials' });
-      }
+        if (userResult.rows.length === 0) {
+            return res.status(404).json({ message: "User not found" });
+        }
 
-      const user = userResult.rows[0];
-
-      // Check password
-      const isMatch = await bcrypt.compare(password, user.password);
-      if (!isMatch) {
-        return res.status(400).json({ message: 'Invalid credentials' });
-      }
-
-      // Create token
-      const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, {
-        expiresIn: '7d',
-      });
-
-      res.json({ user, token });
+        res.json(userResult.rows[0]);
     } catch (error) {
-      console.error('Login error:', error);
-      res.status(500).json({ message: 'Server error' });
+        console.error('Get profile error:', error);
+        res.status(500).json({ message: "Server error" });
     }
   }
 };

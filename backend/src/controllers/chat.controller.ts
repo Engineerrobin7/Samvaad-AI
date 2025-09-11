@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
-import { pool } from '../db/pool';
+import  pool  from '../db/pool';
 import multer from 'multer';
 import path from 'path';
 
