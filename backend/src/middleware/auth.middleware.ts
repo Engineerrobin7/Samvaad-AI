@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
-import { clerkClient } from '@clerk/clerk-sdk-node';
-import { pool } from '../db/pool';
+import { verifyToken } from '@clerk/express';
+import pool from '../db/pool';
 
 export const authenticate = async (req: Request, res: Response, next: NextFunction) => {
   const authHeader = req.headers.authorization;
@@ -12,25 +12,35 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
   const token = authHeader.split(' ')[1];
 
   try {
-    const payload = await clerkClient.verifyToken(token);
+    // ✅ Verify token with Clerk
+    const payload = await verifyToken(token, {
+      secretKey: process.env.CLERK_SECRET_KEY!,  // add this in your .env
+    });
+
     const clerkUserId = payload.sub;
 
     if (!clerkUserId) {
       return res.status(401).json({ message: 'Invalid token' });
     }
-    
-    // Find the corresponding user in your local DB
-    const userResult = await pool.query('SELECT id FROM users WHERE clerk_id = $1', [clerkUserId]);
+
+    // ✅ Lookup local user in DB
+    const userResult = await pool.query(
+      'SELECT id FROM users WHERE clerk_id = $1',
+      [clerkUserId]
+    );
+
     if (userResult.rows.length === 0) {
-        return res.status(404).json({ message: 'User not found in local database. Please sync.' });
+      return res.status(404).json({
+        message: 'User not found in local database. Please sync.',
+      });
     }
 
-    // Attach your internal user ID to the request object
+    // Attach your internal user ID to the request
     (req as any).user = {
       id: userResult.rows[0].id, // Your internal DB user ID
-      clerkId: clerkUserId
+      clerkId: clerkUserId,
     };
-    
+
     next();
   } catch (error) {
     console.error('Authentication error:', error);

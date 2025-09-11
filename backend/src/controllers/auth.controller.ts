@@ -1,7 +1,6 @@
 import { Request, Response } from 'express';
-import { clerkClient } from '@clerk/clerk-sdk-node';
-import { pool } from '../db/pool';
-
+import { clerkClient } from '@clerk/express';
+import pool from '../db/pool';
 export const authController = {
   // Syncs Clerk user with your local database
   async syncUser(req: Request, res: Response) {
