@@ -4,9 +4,10 @@
 -- Users table
 CREATE TABLE IF NOT EXISTS users (
   id SERIAL PRIMARY KEY,
+  clerk_id VARCHAR(255) UNIQUE NOT NULL, -- Added for Clerk integration
   name VARCHAR(100) NOT NULL,
   email VARCHAR(100) UNIQUE NOT NULL,
-  password VARCHAR(100) NOT NULL,
+  -- password column removed as authentication is handled by Clerk
   preferred_language VARCHAR(10) DEFAULT 'en',
   points INTEGER DEFAULT 0,
   level INTEGER DEFAULT 1,

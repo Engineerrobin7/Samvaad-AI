@@ -28,7 +28,7 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    origin: '*', // Temporarily allow all origins for debugging
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     credentials: true
   }
@@ -36,7 +36,7 @@ const io = new Server(server, {
 
 // Middleware
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: '*', // Temporarily allow all origins for debugging
   credentials: true
 }));
 app.use(express.json({ limit: '10mb' }));
