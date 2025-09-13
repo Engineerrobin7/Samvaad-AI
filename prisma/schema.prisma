@@ -96,3 +96,23 @@ model UserQuizAttempt {
 
   @@schema("public")
 }
+
+model Document {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+  chunks    DocumentChunk[]
+
+  @@schema("public")
+}
+
+model DocumentChunk {
+  id         String   @id @default(cuid())
+  content    String
+  embedding  Unsupported("vector(1536)")
+  documentId String
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@schema("public")
+}

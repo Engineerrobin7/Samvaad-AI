@@ -4,6 +4,8 @@ import  pool from '../db/pool';
 import { aiService } from '../services/ai.service';
 import multer from 'multer';
 import path from 'path';
+import pdf from 'pdf-parse';
+import fs from 'fs';
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -29,6 +31,132 @@ export const upload = multer({
     }
   }
 });
+
+const pdfStorage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, 'uploads/faq');
+    },
+    filename: function (req, file, cb) {
+        cb(null, file.originalname);
+    }
+});
+
+export const uploadPdf = multer({
+    storage: pdfStorage,
+    limits: {
+        fileSize: 10 * 1024 * 1024 // 10MB limit
+    },
+    fileFilter: (req, file, cb) => {
+        if (file.mimetype === 'application/pdf') {
+            cb(null, true);
+        } else {
+            cb(new Error('Invalid file type. Only PDF files are allowed.'));
+        }
+    }
+});
+
+// In-memory cache for PDF content
+const pdfCache = new Map<string, string>();
+
+/**
+ * Upload and process a PDF file
+ * @route POST /api/ai/upload-pdf
+ */
+export const uploadPdfHandler = async (req: Request, res: Response) => {
+    try {
+        const { conversationId } = req.body;
+        const file = req.file;
+
+        if (!file) {
+            return res.status(400).json({
+                success: false,
+                message: 'PDF file is required'
+            });
+        }
+
+        if (!conversationId) {
+            return res.status(400).json({
+                success: false,
+                message: 'Conversation ID is required'
+            });
+        }
+
+        const dataBuffer = fs.readFileSync(file.path);
+        const data = await pdf(dataBuffer);
+
+        pdfCache.set(conversationId, data.text);
+
+        res.json({
+            success: true,
+            message: 'PDF uploaded and processed successfully'
+        });
+
+    } catch (error) {
+        console.error('PDF upload error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'PDF upload failed',
+            error: error instanceof Error ? error.message : 'Unknown error'
+        });
+    }
+};
+
+/**
+ * Chat with AI about a PDF
+ * @route POST /api/ai/chat-with-pdf
+ */
+export const chatWithPdf = async (req: Request, res: Response) => {
+    try {
+        const { question, conversationId } = req.body;
+        const userId = (req as any).user?.id;
+
+        if (!question || !conversationId) {
+            return res.status(400).json({
+                success: false,
+                message: 'Question and Conversation ID are required'
+            });
+        }
+
+        const pdfText = pdfCache.get(conversationId);
+
+        if (!pdfText) {
+            return res.status(404).json({
+                success: false,
+                message: 'PDF not found for this conversation. Please upload a PDF first.'
+            });
+        }
+
+        const reply = await aiService.chatWithPdf(question, pdfText);
+
+        // Log conversation for analytics
+        if (userId) {
+            try {
+                await pool.query(
+                    'INSERT INTO ai_conversation_logs (conversation_id, user_id, model, message, reply, language) VALUES ($1, $2, $3, $4, $5, $6)',
+                    [conversationId, userId, 'gemini-pdf-chat', question, reply, 'en']
+                );
+            } catch (logError) {
+                console.error('Failed to log PDF chat:', logError);
+            }
+        }
+
+        res.json({
+            success: true,
+            data: {
+                reply,
+                conversationId
+            }
+        });
+
+    } catch (error) {
+        console.error('Chat with PDF error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Chat with PDF failed',
+            error: error instanceof Error ? error.message : 'Unknown error'
+        });
+    }
+};
 
 /**
  * Translate text with cultural context

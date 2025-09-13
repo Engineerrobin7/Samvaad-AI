@@ -11,6 +11,9 @@ export function Navbar() {
           <Link href="/chat" className="text-sm font-medium hover:underline underline-offset-4">
             Chat
           </Link>
+          <Link href="/chat-with-pdf" className="text-sm font-medium hover:underline underline-offset-4">
+            Chat with PDF
+          </Link>
           <Link href="/translate" className="text-sm font-medium hover:underline underline-offset-4">
             Translate
           </Link>

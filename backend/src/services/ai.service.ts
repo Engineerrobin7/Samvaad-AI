@@ -259,6 +259,35 @@ Remember: You are designed to bridge cultural and linguistic gaps in India.`;
   }
 
   /**
+   * Chat with AI about a PDF document
+   */
+  async chatWithPdf(question: string, pdfText: string): Promise<string> {
+    try {
+      const model = this.genAI.getGenerativeModel({ model: "gemini-pro" });
+
+      const prompt = `You are a helpful assistant that answers questions based on the provided text.
+      Given the following document, please answer the user's question.
+      
+      Document:
+      ---
+      ${pdfText}
+      ---
+      
+      Question: ${question}
+      
+      Answer:`;
+
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      return response.text();
+
+    } catch (error) {
+      console.error('Chat with PDF error:', error);
+      throw new Error('Chat with PDF service failed');
+    }
+  }
+
+  /**
    * Get active conversation count
    */
   getActiveConversationCount(): number {

@@ -78,7 +78,7 @@ export default function LearnPage() {
                   <CardTitle className="flex items-center gap-2"><BookOpen/>{languageData.name} Lessons</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {languageData.lessons.map((lesson, index) => {
+                  {Array.isArray(languageData.lessons) ? languageData.lessons.map((lesson, index) => {
                     const isPlayable = lesson.completed || languageData.lessons.findIndex(l => !l.completed) === index;
                     return (
                         <div key={lesson.id} className="flex items-center justify-between p-4 rounded-lg border">
@@ -96,7 +96,7 @@ export default function LearnPage() {
                             </Button>
                         </div>
                     );
-                  })}
+                  }) : <p>No lessons available.</p>}
                 </CardContent>
               </Card>
             </div>
