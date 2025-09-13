@@ -6,6 +6,7 @@ import cors from 'cors';
 import { config } from 'dotenv';
 import path from 'path';
 import fs from 'fs';
+import pdfRoutes from './routes/pdf.routes';
 
 // Import routes
 import authRoutes from './routes/auth.routes';
@@ -57,6 +58,7 @@ app.use('/api/chat', chatRoutes);
 app.use('/api/tips', tipsRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/learn', learnRoutes);
+app.use('/api/pdf', pdfRoutes);
 
 // Health check endpoint
 app.get('/', (req, res) => {
@@ -75,7 +77,7 @@ app.get('/', (req, res) => {
       '/api/chat - Real-time chat functionality',
       '/api/tips - Cultural and language tips',
       '/api/ai - AI-powered translation and chat',
-      '/api/learn - Language learning system',
+        '/api/learn - Language learning system',
       '/api/health - Health status check'
     ]
   });
