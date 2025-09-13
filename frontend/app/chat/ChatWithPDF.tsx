@@ -51,8 +51,23 @@ export default function ChatWithPDF() {
   return (
     <div className="max-w-xl mx-auto p-8">
       <h2 className="text-2xl font-bold mb-4">Chat with PDF</h2>
-      <input type="file" accept="application/pdf" onChange={handleFileChange} disabled={isUploading || isChatting} />
-      <Button onClick={handleUpload} disabled={!pdfFile || isUploading || isChatting} className="ml-2">Upload PDF</Button>
+      <label htmlFor="pdf-upload" className="block mb-2 font-medium">Upload PDF file</label>
+      <input
+        id="pdf-upload"
+        type="file"
+        accept="application/pdf"
+        onChange={handleFileChange}
+        disabled={isUploading || isChatting}
+        title="Select a PDF file to upload"
+      />
+      <Button
+        onClick={handleUpload}
+        disabled={!pdfFile || isUploading || isChatting}
+        className="ml-2"
+        title="Upload selected PDF file"
+      >
+        Upload PDF
+      </Button>
       <div className="mt-6 border rounded p-4 min-h-[200px] bg-muted/30">
         {messages.map((msg, idx) => (
           <div key={idx} className={`mb-2 ${msg.sender === "user" ? "text-right" : "text-left"}`}>
@@ -63,14 +78,17 @@ export default function ChatWithPDF() {
       </div>
       {isChatting && (
         <form onSubmit={handleSendMessage} className="flex gap-2 mt-4">
+          <label htmlFor="chat-input" className="sr-only">Chat input</label>
           <input
+            id="chat-input"
             type="text"
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
             placeholder="Ask something about the PDF..."
             className="flex-1 rounded-md border px-3 py-2 text-sm shadow-sm"
+            title="Type your question about the PDF"
           />
-          <Button type="submit">Send</Button>
+          <Button type="submit" title="Send your message">Send</Button>
         </form>
       )}
     </div>

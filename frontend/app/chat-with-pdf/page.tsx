@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { ThemeToggle } from '@/components/theme-toggle'
@@ -16,6 +16,15 @@ interface Message {
   timestamp: Date;
 }
 
+const languages = [
+  { value: 'en', label: 'English' },
+  { value: 'hi', label: 'Hindi' },
+  { value: 'es', label: 'Spanish' },
+  { value: 'fr', label: 'French' },
+  { value: 'de', label: 'German' },
+  { value: 'pa', label: 'Punjabi' },
+];
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
 export default function ChatWithPdfPage() {
@@ -26,6 +35,8 @@ export default function ChatWithPdfPage() {
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [language, setLanguage] = useState('en');
+  const [assistanceStatus, setAssistanceStatus] = useState<'idle' | 'loading' | 'requested' | 'error'>('idle');
   const { token } = useAuth();
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -57,6 +68,7 @@ export default function ChatWithPdfPage() {
     const formData = new FormData();
     formData.append('pdf', pdfFile);
     formData.append('conversationId', conversationId);
+    formData.append('language', language);
 
     try {
       const res = await fetch(`${API_URL}/ai/upload-pdf`, {
@@ -112,7 +124,8 @@ export default function ChatWithPdfPage() {
         },
         body: JSON.stringify({
           question: inputText,
-          conversationId
+          conversationId,
+          language,
         }),
       });
 
@@ -124,7 +137,7 @@ export default function ChatWithPdfPage() {
       const aiMessage: Message = {
         id: Date.now().toString(),
         sender: 'ai',
-        text: data.reply,
+        text: data.data.reply,
         timestamp: new Date()
       };
       
@@ -133,6 +146,41 @@ export default function ChatWithPdfPage() {
       console.error(error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleRequestAssistance = async () => {
+    if (!conversationId) return;
+
+    if (window.confirm('Are you sure you want to request human assistance?')) {
+      setAssistanceStatus('loading');
+      try {
+        const res = await fetch(`${API_URL}/assistance/request`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify({ conversationId }),
+        });
+
+        if (!res.ok) {
+          throw new Error('Failed to request assistance');
+        }
+
+        setAssistanceStatus('requested');
+        const assistanceMessage: Message = {
+          id: Date.now().toString(),
+          sender: 'ai',
+          text: 'A human assistant has been notified. They will get back to you shortly.',
+          timestamp: new Date(),
+        };
+        setMessages(prev => [...prev, assistanceMessage]);
+
+      } catch (error) {
+        console.error(error);
+        setAssistanceStatus('error');
+      }
     }
   };
 
@@ -157,6 +205,24 @@ export default function ChatWithPdfPage() {
             <Link href="/learn" className="text-sm font-medium hover:underline underline-offset-4">
               Learn
             </Link>
+            <select
+              value={language}
+              onChange={(e) => setLanguage(e.target.value)}
+              className="bg-background border border-input rounded-md px-3 py-1 text-sm"
+            >
+              {languages.map((lang) => (
+                <option key={lang.value} value={lang.value}>
+                  {lang.label}
+                </option>
+              ))}
+            </select>
+            <button
+              onClick={handleRequestAssistance}
+              disabled={assistanceStatus === 'loading' || assistanceStatus === 'requested'}
+              className="rounded-md bg-amber-500 px-4 py-2 text-sm font-medium text-white shadow transition-colors hover:bg-amber-600 disabled:opacity-50"
+            >
+              {assistanceStatus === 'requested' ? 'Assistance Requested' : 'Request Human Assistance'}
+            </button>
             <ThemeToggle />
           </nav>
         </div>

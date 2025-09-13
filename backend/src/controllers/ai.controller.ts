@@ -64,7 +64,7 @@ const pdfCache = new Map<string, string>();
  */
 export const uploadPdfHandler = async (req: Request, res: Response) => {
     try {
-        const { conversationId } = req.body;
+        const { conversationId, language } = req.body;
         const file = req.file;
 
         if (!file) {
@@ -84,7 +84,7 @@ export const uploadPdfHandler = async (req: Request, res: Response) => {
         const dataBuffer = fs.readFileSync(file.path);
         const data = await pdf(dataBuffer);
 
-        pdfCache.set(conversationId, data.text);
+        pdfCache.set(conversationId, JSON.stringify({ text: data.text, language: language || 'en' }));
 
         res.json({
             success: true,
@@ -100,6 +100,55 @@ export const uploadPdfHandler = async (req: Request, res: Response) => {
         });
     }
 };
+
+/**
+ * Chat with AI about a PDF
+ * @route POST /api/ai/chat-with-pdf
+ */
+export const chatWithPdf = async (req: Request, res: Response) => {
+    try {
+        const { question, conversationId, language } = req.body;
+        const userId = (req as any).user?.id;
+
+        if (!question || !conversationId) {
+            return res.status(400).json({
+                success: false,
+                message: 'Question and Conversation ID are required'
+            });
+        }
+
+        const pdfData = pdfCache.get(conversationId);
+
+        if (!pdfData) {
+            return res.status(404).json({
+                success: false,
+                message: 'PDF not found for this conversation. Please upload a PDF first.'
+            });
+        }
+
+        const { text: pdfText, language: pdfLanguage } = JSON.parse(pdfData);
+
+        const reply = await aiService.chatWithPdf(question, pdfText, language || pdfLanguage || 'en');
+
+        // Log conversation for analytics
+        if (userId) {
+            try {
+                await pool.query(
+                    'INSERT INTO ai_conversation_logs (conversation_id, user_id, model, message, reply, language) VALUES ($1, $2, $3, $4, $5, $6)',
+                    [conversationId, userId, 'gemini-pdf-chat', question, reply, language || pdfLanguage || 'en']
+                );
+            } catch (logError) {
+                console.error('Failed to log PDF chat:', logError);
+            }
+        }
+
+        res.json({
+            success: true,
+            data: {
+                reply,
+                conversationId
+            }
+        });
 
 /**
  * Chat with AI about a PDF

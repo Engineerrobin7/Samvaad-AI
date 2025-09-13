@@ -261,12 +261,12 @@ Remember: You are designed to bridge cultural and linguistic gaps in India.`;
   /**
    * Chat with AI about a PDF document
    */
-  async chatWithPdf(question: string, pdfText: string): Promise<string> {
+  async chatWithPdf(question: string, pdfText: string, language: string = 'en'): Promise<string> {
     try {
       const model = this.genAI.getGenerativeModel({ model: "gemini-pro" });
 
-      const prompt = `You are a helpful assistant that answers questions based on the provided text.
-      Given the following document, please answer the user's question.
+      const prompt = `You are a helpful assistant that answers questions based on the provided text in the specified language.
+      Given the following document, please answer the user's question in ${language}.
       
       Document:
       ---

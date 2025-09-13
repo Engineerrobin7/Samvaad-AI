@@ -37,6 +37,7 @@ export default function ChatPage() {
   const [selectedLanguage, setSelectedLanguage] = useState('en');
   const [isLoading, setIsLoading] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
+  const [assistanceStatus, setAssistanceStatus] = useState<'idle' | 'loading' | 'requested' | 'error'>('idle');
   const { token } = useAuth();
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -93,7 +94,7 @@ export default function ChatPage() {
       const aiMessage: Message = {
         id: Date.now().toString(),
         sender: 'ai',
-        text: data.reply,
+        text: data.data.reply,
         timestamp: new Date()
       };
       
@@ -102,6 +103,41 @@ export default function ChatPage() {
       console.error(error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleRequestAssistance = async () => {
+    if (!conversationId) return;
+
+    if (window.confirm('Are you sure you want to request human assistance?')) {
+      setAssistanceStatus('loading');
+      try {
+        const res = await fetch(`${API_URL}/assistance/request`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify({ conversationId }),
+        });
+
+        if (!res.ok) {
+          throw new Error('Failed to request assistance');
+        }
+
+        setAssistanceStatus('requested');
+        const assistanceMessage: Message = {
+          id: Date.now().toString(),
+          sender: 'ai',
+          text: 'A human assistant has been notified. They will get back to you shortly.',
+          timestamp: new Date(),
+        };
+        setMessages(prev => [...prev, assistanceMessage]);
+
+      } catch (error) {
+        console.error(error);
+        setAssistanceStatus('error');
+      }
     }
   };
 
@@ -132,8 +168,7 @@ export default function ChatPage() {
         <div className="flex-1 flex flex-col max-w-4xl mx-auto w-full p-4">
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-2xl font-bold">Multilingual Chat</h1>
-            <div className="flex items-center">
-              <label htmlFor="language-select" className="mr-2 text-sm">Your Language:</label>
+            <div className="flex items-center gap-4">
               <select 
                 id="language-select"
                 value={selectedLanguage}
@@ -146,6 +181,13 @@ export default function ChatPage() {
                   </option>
                 ))}
               </select>
+              <button
+                onClick={handleRequestAssistance}
+                disabled={assistanceStatus === 'loading' || assistanceStatus === 'requested'}
+                className="rounded-md bg-amber-500 px-4 py-2 text-sm font-medium text-white shadow transition-colors hover:bg-amber-600 disabled:opacity-50"
+              >
+                {assistanceStatus === 'requested' ? 'Assistance Requested' : 'Request Human Assistance'}
+              </button>
             </div>
           </div>
           
