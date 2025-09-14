@@ -76,6 +76,9 @@ export default function Home() {
               <Link href="/chat" className="text-sm font-medium hover:underline underline-offset-4">
                 Chat
               </Link>
+              <Link href="/chat-with-pdf" className="text-sm font-medium hover:underline underline-offset-4">
+                Chat with PDF
+              </Link>
               <Link href="/learn" className="text-sm font-medium hover:underline underline-offset-4">
                 Learn
               </Link>

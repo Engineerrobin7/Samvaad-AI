@@ -208,7 +208,8 @@ export default function ChatWithPdfPage() {
             <select
               value={language}
               onChange={(e) => setLanguage(e.target.value)}
-              className="bg-background border border-input rounded-md px-3 py-1 text-sm"
+              className="border rounded px-2 py-1 mr-2"
+              title="Select language for PDF chat"
             >
               {languages.map((lang) => (
                 <option key={lang.value} value={lang.value}>
@@ -220,6 +221,7 @@ export default function ChatWithPdfPage() {
               onClick={handleRequestAssistance}
               disabled={assistanceStatus === 'loading' || assistanceStatus === 'requested'}
               className="rounded-md bg-amber-500 px-4 py-2 text-sm font-medium text-white shadow transition-colors hover:bg-amber-600 disabled:opacity-50"
+              title="Request Human Assistance"
             >
               {assistanceStatus === 'requested' ? 'Assistance Requested' : 'Request Human Assistance'}
             </button>
@@ -256,16 +258,15 @@ export default function ChatWithPdfPage() {
             {pdfFile && (
               <div className="mt-4 text-sm text-muted-foreground">
                 Selected file: {pdfFile.name}
+                <button
+                  onClick={handleUpload}
+                  disabled={isUploading}
+                  className="ml-4 inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors bg-blue-600 text-white hover:bg-blue-700 h-10 px-4 py-2"
+                  title="Upload PDF"
+                >
+                  {isUploading ? "Uploading..." : "Upload PDF"}
+                </button>
               </div>
-            )}
-            {pdfFile && (
-              <button
-                onClick={handleUpload}
-                disabled={isUploading}
-                className="mt-4 rounded-md bg-secondary px-4 py-2 text-sm font-medium text-secondary-foreground shadow transition-colors hover:bg-secondary/90 disabled:opacity-50"
-              >
-                {isUploading ? 'Uploading...' : 'Upload and Start Chat'}
-              </button>
             )}
             {uploadError && (
               <p className="mt-4 text-sm text-red-500">{uploadError}</p>
@@ -324,6 +325,7 @@ export default function ChatWithPdfPage() {
                 type="submit"
                 disabled={isLoading || !inputText.trim()}
                 className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 disabled:opacity-50"
+                title="Send message"
               >
                 <ArrowUp className="w-4 h-4" />
               </button>

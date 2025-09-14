@@ -20,6 +20,7 @@
   "author": "Smart India Hackathon Team",
   "license": "MIT",
   "devDependencies": {
+    "@types/react": "^19.1.13",
     "autoprefixer": "^10.4.16",
     "concurrently": "^8.2.2",
     "postcss": "^8.4.31",
