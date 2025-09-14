@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/yourusername/samvaad-ai/main/assets/logo.png" alt="Samvaad AI Logo" width="200"/>
+  <img src="./public/logo.jpg" alt="Samvaad AI Logo" width="200"/>
 </p>
 
 <p align="center">
