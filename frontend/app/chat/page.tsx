@@ -171,6 +171,7 @@ export default function ChatPage() {
             <div className="flex items-center gap-4">
               <select 
                 id="language-select"
+                title="Select language"
                 value={selectedLanguage}
                 onChange={(e) => setSelectedLanguage(e.target.value)}
                 className="rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm"
@@ -200,17 +201,25 @@ export default function ChatPage() {
                   animate={{ opacity: 1, y: 0 }}
                   className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
-                  <div 
-                    className={`max-w-[80%] rounded-lg p-3 ${
-                      message.sender === 'user' 
-                        ? 'bg-primary text-primary-foreground' 
-                        : 'bg-muted'
-                    }`}
-                  >
-                    <p>{message.text}</p>
-                    <p className="text-xs mt-1 opacity-50">
-                      {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </p>
+                  <div className="flex items-end gap-2">
+                    {message.sender === 'ai' && (
+                      <div className="w-8 h-8 rounded-full bg-purple-200 flex items-center justify-center font-bold text-purple-700">AI</div>
+                    )}
+                    <div 
+                      className={`max-w-[80%] rounded-lg p-3 ${
+                        message.sender === 'user' 
+                          ? 'bg-primary text-primary-foreground' 
+                          : 'bg-muted'
+                      }`}
+                    >
+                      <p>{message.text}</p>
+                      <p className="text-xs mt-1 opacity-50">
+                        {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                    </div>
+                    {message.sender === 'user' && (
+                      <div className="w-8 h-8 rounded-full bg-blue-200 flex items-center justify-center font-bold text-blue-700">U</div>
+                    )}
                   </div>
                 </motion.div>
               ))}
@@ -251,7 +260,7 @@ export default function ChatPage() {
         <div className="w-80 border-l p-4 hidden md:block">
           <div className="sticky top-20">
             <h2 className="font-bold mb-2">Cultural Tips</h2>
-            {/* TODO: Fetch and display cultural tips */}
+            <div className="mb-4 text-sm text-muted-foreground">Coming soon: cultural tips for your selected language will appear here.</div>
             
             <h2 className="font-bold mt-6 mb-2">Learning Progress</h2>
             {/* TODO: Fetch and display learning progress */}

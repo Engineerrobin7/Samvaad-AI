@@ -2,6 +2,16 @@ import { Request, Response, NextFunction } from 'express';
 import { verifyToken } from '@clerk/express';
 import pool from '../db/pool';
 
+// Declare a local interface for Request to include the 'user' property
+declare module 'express' {
+  interface Request {
+    user?: {
+      id: string;
+      clerkId: string;
+    };
+  }
+}
+
 export const authenticate = async (req: Request, res: Response, next: NextFunction) => {
   const authHeader = req.headers.authorization;
 
@@ -36,7 +46,7 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
     }
 
     // Attach your internal user ID to the request
-    (req as any).user = {
+    req.user = { // No need for (req as any) anymore
       id: userResult.rows[0].id, // Your internal DB user ID
       clerkId: clerkUserId,
     };

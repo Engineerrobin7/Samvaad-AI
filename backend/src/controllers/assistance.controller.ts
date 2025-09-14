@@ -58,3 +58,27 @@ export const requestAssistance = async (req: Request, res: Response) => {
     });
   }
 };
+
+/**
+ * Get all human assistance requests
+ * @route GET /api/assistance/requests
+ */
+export const getAssistanceRequests = async (req: Request, res: Response) => {
+  try {
+    const requests = await pool.query(
+      'SELECT * FROM human_escalations ORDER BY created_at DESC'
+    );
+
+    res.json({
+      success: true,
+      data: requests.rows,
+    });
+  } catch (error) {
+    console.error('Get assistance requests error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to get human assistance requests',
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+};

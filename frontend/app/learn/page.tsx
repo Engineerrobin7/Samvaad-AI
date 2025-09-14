@@ -23,6 +23,7 @@ interface LanguageDetails {
     progress: number;
     level: number;
     lessons: Lesson[];
+    availableLanguages?: { code: string; name: string }[];
 }
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
@@ -51,66 +52,74 @@ export default function LearnPage() {
       }
     };
     fetchLanguageData();
-  }, [selectedLanguage, getToken]);
+  } // <-- end of useEffect function
+  , [selectedLanguage, getToken]);
 
   return (
     <div className="flex flex-col min-h-screen">
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur">
         {/* ... Navbar ... */}
       </header>
-      <main className="flex-1 container py-8">
-        <h1 className="text-3xl font-bold mb-2">Language Learning</h1>
-        <p className="text-muted-foreground mb-8">Master Indian languages with cultural context</p>
-        
-        {/* Language Selection can be improved to fetch languages from backend */}
-        <div className="flex gap-4 mb-8">
-            <Button variant={selectedLanguage === 'hi' ? 'default' : 'outline'} onClick={() => setSelectedLanguage('hi')}>Hindi</Button>
-            <Button variant={selectedLanguage === 'bn' ? 'default' : 'outline'} onClick={() => setSelectedLanguage('bn')}>Bengali</Button>
-        </div>
-
-        {isLoading ? <div className="flex justify-center mt-8"><Loader2 className="animate-spin" size={32}/></div> :
-         !languageData ? <p>Could not load learning data.</p> :
-         (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2"><BookOpen/>{languageData.name} Lessons</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {Array.isArray(languageData.lessons) ? languageData.lessons.map((lesson, index) => {
-                    const isPlayable = lesson.completed || languageData.lessons.findIndex(l => !l.completed) === index;
-                    return (
-                        <div key={lesson.id} className="flex items-center justify-between p-4 rounded-lg border">
-                            <div className="flex items-center gap-3">
-                                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${lesson.completed ? 'bg-green-500 text-white' : isPlayable ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
-                                    {lesson.completed ? <CheckCircle/> : isPlayable ? <Play/> : <Lock/>}
-                                </div>
-                                <div>
-                                    <h4 className="font-medium">{lesson.title}</h4>
-                                    <p className="text-sm text-muted-foreground">{lesson.duration} min</p>
-                                </div>
-                            </div>
-                            <Button variant={isPlayable ? "default" : "ghost"} size="sm" disabled={!isPlayable}>
-                                {lesson.completed ? 'Review' : 'Start'}
-                            </Button>
-                        </div>
-                    );
-                  }) : <p>No lessons available.</p>}
-                </CardContent>
-              </Card>
+      <main className="flex-1 container py-8 flex flex-row gap-8">
+        {/* Sidebar for navigation */}
+        <aside className="hidden lg:block w-64 bg-muted rounded-lg p-6 mr-8">
+          <nav className="space-y-4">
+            <h2 className="text-xl font-bold mb-4">Quick Links</h2>
+            <Link href="/learn" className="block py-2 px-3 rounded hover:bg-primary/10">Dashboard</Link>
+            <Link href="/learn/lessons" className="block py-2 px-3 rounded hover:bg-primary/10">Lessons</Link>
+            <Link href="/learn/progress" className="block py-2 px-3 rounded hover:bg-primary/10">Progress</Link>
+            <Link href="/learn/tips" className="block py-2 px-3 rounded hover:bg-primary/10">Cultural Tips</Link>
+          </nav>
+        </aside>
+        <section className="flex-1">
+          {/* Motivational Banner */}
+          <div className="bg-gradient-to-r from-primary to-green-400 text-white rounded-lg p-6 mb-8 shadow flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold">Welcome back!</h2>
+              <p className="text-sm">Keep up the great work learning {languageData?.name || 'your language'}!</p>
             </div>
-            <div className="space-y-6">
-                <Card>
-                    <CardHeader><CardTitle>Your Progress</CardTitle></CardHeader>
-                    <CardContent className="space-y-4">
-                        <p>Level: {languageData.level}</p>
-                        <Progress value={languageData.progress}/>
-                    </CardContent>
-                </Card>
+            <div className="hidden md:block">
+              <BookOpen size={48}/>
             </div>
           </div>
-        )}
+        </section>
+        <div className="space-y-6">
+          <Card>
+            <CardHeader><CardTitle>Your Progress</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <p>Level: {languageData ? languageData.level : "-"}</p>
+              <Progress value={languageData ? languageData.progress : 0}/>
+            </CardContent>
+          </Card>
+        </div>
+        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {languageData?.lessons?.map((lesson) => (
+            <motion.div
+              key={lesson.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+              className={`bg-white rounded-lg shadow-md p-6 flex flex-col items-start border-2 ${lesson.completed ? 'border-green-400' : 'border-primary'}`}
+            >
+              <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
+                {lesson.completed ? <CheckCircle className="text-green-500" size={20}/> : <Play className="text-primary" size={20}/>}
+                Lesson {lesson.id}: {lesson.title}
+              </h3>
+              <p className="text-sm text-muted-foreground mb-4">Duration: {lesson.duration} min</p>
+              <div className="flex items-center gap-2 mb-4">
+                <span className={`text-xs px-2 py-1 rounded ${lesson.completed ? 'bg-green-100 text-green-700' : 'bg-primary/10 text-primary'}`}>Progress: {lesson.completed ? '100%' : '0%'}</span>
+                <progress value={lesson.completed ? 100 : 0} max="100" className="w-24 h-2"></progress>
+              </div>
+              <Button
+                className="mt-auto"
+                disabled={lesson.completed}
+                onClick={() => alert(`Starting lesson: ${lesson.title}`)}
+              >
+                {lesson.completed ? 'Completed' : 'Start Lesson'}
+              </Button>
+            </motion.div>
+          ))}
+        </div>
       </main>
     </div>
   );
