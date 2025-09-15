@@ -182,6 +182,25 @@ export const setupSocketHandlers = (io: Server) => {
       try {
         const { messageId, newContent, userId } = data;
         
+        // Verify the user is a participant of the room
+        const roomCheck = await pool.query(
+          'SELECT room_id FROM chat_messages WHERE id = $1',
+          [messageId]
+        );
+        if (roomCheck.rows.length === 0) {
+          socket.emit('error', { message: 'Message not found' });
+          return;
+        }
+        const roomId = roomCheck.rows[0].room_id;
+        const participantCheck = await pool.query(
+          'SELECT 1 FROM chat_participants WHERE room_id = $1 AND user_id = $2',
+          [roomId, userId]
+        );
+        if (participantCheck.rows.length === 0) {
+          socket.emit('error', { message: 'Unauthorized access to chat room' });
+          return;
+        }
+
         // Verify the user owns this message
         const { rows } = await pool.query(
           'SELECT room_id FROM chat_messages WHERE id = $1 AND user_id = $2',
@@ -192,8 +211,6 @@ export const setupSocketHandlers = (io: Server) => {
           socket.emit('error', { message: 'Cannot edit this message' });
           return;
         }
-        
-        const roomId = rows[0].room_id;
         
         // Update message
         await pool.query(
@@ -219,6 +236,25 @@ export const setupSocketHandlers = (io: Server) => {
       try {
         const { messageId, userId } = data;
         
+        // Verify the user is a participant of the room
+        const roomCheck = await pool.query(
+          'SELECT room_id FROM chat_messages WHERE id = $1',
+          [messageId]
+        );
+        if (roomCheck.rows.length === 0) {
+          socket.emit('error', { message: 'Message not found' });
+          return;
+        }
+        const roomId = roomCheck.rows[0].room_id;
+        const participantCheck = await pool.query(
+          'SELECT 1 FROM chat_participants WHERE room_id = $1 AND user_id = $2',
+          [roomId, userId]
+        );
+        if (participantCheck.rows.length === 0) {
+          socket.emit('error', { message: 'Unauthorized access to chat room' });
+          return;
+        }
+
         // Verify the user owns this message
         const { rows } = await pool.query(
           'SELECT room_id FROM chat_messages WHERE id = $1 AND user_id = $2',
@@ -229,8 +265,6 @@ export const setupSocketHandlers = (io: Server) => {
           socket.emit('error', { message: 'Cannot delete this message' });
           return;
         }
-        
-        const roomId = rows[0].room_id;
         
         // Delete message (or mark as deleted)
         await pool.query('DELETE FROM chat_messages WHERE id = $1', [messageId]);
@@ -244,6 +278,32 @@ export const setupSocketHandlers = (io: Server) => {
       } catch (error) {
         console.error('Error deleting message:', error);
         socket.emit('error', { message: 'Failed to delete message' });
+      }
+    });
+
+    // Get room participants
+    socket.on('get_room_participants', async (data: { roomId: string, userId: number }) => {
+      try {
+        const { roomId, userId } = data;
+
+        // Verify user is a participant of the room
+        const participantCheck = await pool.query(
+          'SELECT 1 FROM chat_participants WHERE room_id = $1 AND user_id = $2',
+          [roomId, userId]
+        );
+        if (participantCheck.rows.length === 0) {
+          socket.emit('error', { message: 'Unauthorized access to chat room' });
+          return;
+        }
+
+        const result = await pool.query(
+          'SELECT u.id, u.name, u.email FROM chat_participants cp JOIN users u ON cp.user_id = u.id WHERE cp.room_id = $1',
+          [roomId]
+        );
+        socket.emit('room_participants', result.rows);
+      } catch (error) {
+        console.error('Error getting room participants:', error);
+        socket.emit('error', { message: 'Failed to get room participants' });
       }
     });
     

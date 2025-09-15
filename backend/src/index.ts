@@ -14,6 +14,8 @@ import chatRoutes from './routes/chat.routes';
 import tipsRoutes from './routes/tips.routes';
 import aiRoutes from './routes/ai.routes';
 import learnRoutes from './routes/learn.routes';
+import voiceRoutes from './routes/voice.routes';
+import chatRoomRoutes from './routes/chatRoom.routes';
 
 // Import socket handlers
 import { setupSocketHandlers } from './socket';
