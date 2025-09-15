@@ -31,6 +31,7 @@
   "dependencies": {
     "@clerk/nextjs": "^6.31.9",
     "@google-cloud/speech": "^7.2.0",
+    "@google-cloud/text-to-speech": "^6.3.0",
     "@prisma/client": "^6.15.0",
     "@supabase/supabase-js": "^2.57.0",
     "@types/dom-speech-recognition": "^0.0.6",
