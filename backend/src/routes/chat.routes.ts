@@ -1,7 +1,7 @@
 import express from 'express';
-import { getChatHistory, createChatRoom } from '../controllers/chat.controller.js';
+import { getChatHistory, createChatRoom } from '../controllers/chat.controller';
 import { authenticate } from '../middleware/auth.middleware';
-import { uploadAttachment } from '../controllers/chat.controller.js';
+import { uploadAttachment } from '../controllers/chat.controller';
 import multer from 'multer';
 import path from 'path';
 

@@ -1,11 +1,11 @@
 // src/index.ts
-import express from 'express';
-import http from 'http';
+import express, { Request, Response, NextFunction } from 'express';
+import * as http from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
 import { config } from 'dotenv';
-import path from 'path';
-import fs from 'fs';
+import * as path from 'path';
+import * as fs from 'fs';
 import pdfRoutes from './routes/pdf.routes';
 
 // Import routes
@@ -61,7 +61,7 @@ app.use('/api/learn', learnRoutes);
 app.use('/api/pdf', pdfRoutes);
 
 // Health check endpoint
-app.get('/', (req, res) => {
+app.get('/', (req: Request, res: Response) => {
   res.json({
     message: 'Welcome to Samvaad AI Backend!',
     version: '2.0.0',
@@ -84,7 +84,7 @@ app.get('/', (req, res) => {
   });
 });
 
-app.get('/api/health', (req, res) => {
+app.get('/api/health', (req: Request, res: Response) => {
   res.status(200).json({
     status: 'ok',
     message: 'Samvaad AI API is running',
@@ -100,7 +100,7 @@ app.get('/api/health', (req, res) => {
 });
 
 // Error handling middleware
-app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
+app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   console.error('Unhandled error:', err);
   res.status(500).json({
     success: false,
@@ -110,7 +110,7 @@ app.use((err: Error, req: express.Request, res: express.Response, next: express.
 });
 
 // 404 handler
-app.use('*', (req, res) => {
+app.use('*', (req: Request, res: Response) => {
   res.status(404).json({
     success: false,
     message: 'Route not found',

@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { verifyToken } from '@clerk/express';
-import pool from '../db/pool';
+import pool from '../db/pool.js';
 
 // Declare a local interface for Request to include the 'user' property
 declare module 'express' {

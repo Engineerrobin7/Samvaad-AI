@@ -1,14 +1,17 @@
 {
   "compilerOptions": {
-    "target": "es2015",
-    "module": "commonjs",
+    "target": "es2020",
+    "module": "NodeNext",
+    "moduleResolution": "nodenext",
     "outDir": "./dist",
     "rootDir": "./src",
     "strict": true,
     "typeRoots": [
       "./node_modules/@types",
       "./src/types"
-    ]
+    ],
+    "forceConsistentCasingInFileNames": true,
+    "esModuleInterop": true
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "**/*.test.ts"]
