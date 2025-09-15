@@ -7,6 +7,7 @@ import tipsRouter from './routes/tips.routes';
 import aiRouter from './routes/ai.routes';
 import assistanceRouter from './routes/assistance.routes';
 
+import fileUpload from 'express-fileupload';
 const server = express();
 
 // Middleware

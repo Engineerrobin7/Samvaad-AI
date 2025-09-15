@@ -77,7 +77,8 @@ app.get('/', (req, res) => {
       '/api/chat - Real-time chat functionality',
       '/api/tips - Cultural and language tips',
       '/api/ai - AI-powered translation and chat',
-        '/api/learn - Language learning system',
+       
+      '/api/learn - Language learning system',
       '/api/health - Health status check'
     ]
   });

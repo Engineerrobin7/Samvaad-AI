@@ -10,7 +10,7 @@ export const getDashboardStats = async (req: Request, res: Response) => {
   try {
     const totalUsers = await pool.query('SELECT COUNT(*) FROM users');
     const totalConversations = await pool.query('SELECT COUNT(*) FROM ai_conversation_logs');
-    const pendingAssistanceRequests = await pool.query('SELECT COUNT(*) FROM human_escalations WHERE status = 'pending'');
+    const pendingAssistanceRequests = await pool.query("SELECT COUNT(*) FROM human_escalations WHERE status = 'pending'");
 
     res.json({
       success: true,

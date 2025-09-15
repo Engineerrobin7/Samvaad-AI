@@ -25,7 +25,7 @@ const languages = [
   { value: 'pa', label: 'Punjabi' },
 ];
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 export default function ChatWithPdfPage() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -66,23 +66,20 @@ export default function ChatWithPdfPage() {
     setUploadError(null);
 
     const formData = new FormData();
-    formData.append('pdf', pdfFile);
+    formData.append('file', pdfFile);
     formData.append('conversationId', conversationId);
     formData.append('language', language);
 
     try {
-      const res = await fetch(`${API_URL}/ai/upload-pdf`, {
+      const res = await fetch(`${API_URL}/pdf/upload`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
         body: formData,
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.message || 'PDF upload failed');
+        throw new Error(data.error || 'PDF upload failed');
       }
       
       setMessages([{
@@ -116,28 +113,27 @@ export default function ChatWithPdfPage() {
     setIsLoading(true);
     
     try {
-      const res = await fetch(`${API_URL}/ai/chat-with-pdf`, {
+      const res = await fetch(`${API_URL}/pdf/chat`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          question: inputText,
-          conversationId,
-          language,
+          message: inputText,
+          filePath: pdfFile ? pdfFile.name : '',
+          model: 'openai',
         }),
       });
 
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.message || 'AI chat failed');
+        throw new Error(data.error || 'AI chat failed');
       }
 
       const aiMessage: Message = {
         id: Date.now().toString(),
         sender: 'ai',
-        text: data.data.reply,
+        text: data.reply,
         timestamp: new Date()
       };
       
