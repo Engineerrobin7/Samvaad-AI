@@ -297,3 +297,16 @@ Remember: You are designed to bridge cultural and linguistic gaps in India.`;
 
 // Create and export singleton instance
 export const aiService = new AIService();
+
+async analyzeIntentAndEntities(message: string): Promise<{ intent: string; entities: any }> {
+  // Use your AI model to analyze the message
+  const model = this.genAI.getGenerativeModel({ model: "gemini-pro" });
+  const prompt = `Analyze the following message for actionable intent (e.g., meeting, reminder, file request) and extract relevant entities.\nMessage: "${message}"\nRespond with a JSON object: { intent: string, entities: object }.`;
+  const result = await model.generateContent(prompt);
+  const response = await result.response;
+  try {
+    return JSON.parse(response.text().replace(/```json|```/g, "").trim());
+  } catch (err) {
+    return { intent: "none", entities: {} };
+  }
+}

@@ -1,6 +1,7 @@
 // src/socket.ts
 import { Server, Socket } from 'socket.io';
 import  pool  from './db/pool';
+import { aiService } from './services/ai.service';
 
 // In-memory store for active connections and typing indicators
 const activeConnections = new Map<string, string[]>(); // roomId -> socketIds[]
@@ -138,6 +139,15 @@ export const setupSocketHandlers = (io: Server) => {
         }
         
         console.log(`Message sent to room ${roomId} by user ${userId}`);
+        // After broadcasting message to room
+        const analysis = await aiService.analyzeIntentAndEntities(content);
+        if (analysis.intent !== 'none') {
+          io.to(roomId).emit('proactive_suggestion', {
+            intent: analysis.intent,
+            entities: analysis.entities,
+            message: `Would you like help with: ${analysis.intent}?`
+          });
+        }
       } catch (error) {
         console.error('Error handling message:', error);
         socket.emit('error', { message: 'Failed to send message' });

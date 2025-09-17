@@ -178,6 +178,16 @@ export default function GroupChatPage() {
     }
   };
 
+  useEffect(() => {
+    socket.on('proactive_suggestion', (data) => {
+      // Display suggestion UI
+      setSuggestion(data);
+    });
+    return () => {
+      socket.off('proactive_suggestion');
+    };
+  }, []);
+
   if (error) {
     return (
       <div className="flex flex-col min-h-screen items-center justify-center">
