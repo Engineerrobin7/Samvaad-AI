@@ -1,6 +1,7 @@
 // src/controllers/whatsapp.controller.ts
 import { Request, Response } from 'express';
 import { aiService } from '../services/ai.service';
+import { analyticsService } from '../services/analytics.service';
 import axios from 'axios';
 
 const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN;
@@ -50,6 +51,10 @@ class WhatsappController {
             { conversationId: from, language: 'en' }, // Use WhatsApp ID as conversation ID
             [{ role: 'user', content: text }]
           );
+
+          // Log the conversation
+          // userProfileId is null for WhatsApp as it's not authenticated via Clerk
+          await analyticsService.logConversation(null, from, 'whatsapp', text, aiResponse);
 
           // Send response back to WhatsApp
           await axios.post(

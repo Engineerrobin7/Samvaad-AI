@@ -1,6 +1,7 @@
 // src/controllers/telegram.controller.ts
 import { Request, Response } from 'express';
 import { aiService } from '../services/ai.service';
+import { analyticsService } from '../services/analytics.service';
 import axios from 'axios';
 
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
@@ -27,6 +28,10 @@ class TelegramController {
         { conversationId: chatId.toString(), language: 'en' }, // Use chat ID as conversation ID
         [{ role: 'user', content: text }]
       );
+
+      // Log the conversation
+      // userProfileId is null for Telegram as it's not authenticated via Clerk
+      await analyticsService.logConversation(null, chatId.toString(), 'telegram', text, aiResponse);
 
       // Send response back to Telegram
       await axios.post(

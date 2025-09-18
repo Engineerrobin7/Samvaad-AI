@@ -8,13 +8,16 @@ class TicketService {
    * Create a new ticket
    */
   async createTicket(userProfileId: string, subject: string, description: string) {
-    return prisma.ticket.create({
+    const newTicket = await prisma.ticket.create({
       data: {
         userProfileId,
         subject,
         description,
       },
     });
+    console.log(`[NOTIFICATION] New ticket created: ${newTicket.id} - Subject: ${newTicket.subject}`);
+    // In a real application, this would trigger a more robust notification (e.g., email, Socket.IO event)
+    return newTicket;
   }
 
   /**

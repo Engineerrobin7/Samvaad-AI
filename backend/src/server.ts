@@ -11,6 +11,7 @@ import ticketRouter from './routes/ticket.routes';
 import widgetRouter from './routes/widget.routes';
 import whatsappRouter from './routes/whatsapp.routes';
 import telegramRouter from './routes/telegram.routes';
+import analyticsRouter from './routes/analytics.routes';
 
 import fileUpload from 'express-fileupload';
 const server = express();
@@ -34,5 +35,6 @@ server.use('/api/tickets', ticketRouter);
 server.use('/api/widget', widgetRouter);
 server.use('/api/whatsapp', whatsappRouter);
 server.use('/api/telegram', telegramRouter);
+server.use('/api/analytics', analyticsRouter);
 
 export default server;

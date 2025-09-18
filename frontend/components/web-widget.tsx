@@ -6,8 +6,10 @@ import { Input } from './ui/input';
 import { Button } from './ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from './ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { ThumbsUp, ThumbsDown } from 'lucide-react'; // Assuming lucide-react is available
 
 interface Message {
+  id: string; // Unique ID for the message
   sender: 'user' | 'ai';
   text: string;
 }
@@ -33,7 +35,7 @@ export default function WebWidget() {
   const handleSendMessage = async () => {
     if (input.trim() === '') return;
 
-    const userMessage: Message = { sender: 'user', text: input };
+    const userMessage: Message = { id: `user-${messages.length}`, sender: 'user', text: input };
     setMessages((prevMessages) => [...prevMessages, userMessage]);
     setInput('');
 
@@ -55,12 +57,33 @@ export default function WebWidget() {
       }
 
       const data = await response.json();
-      const aiMessage: Message = { sender: 'ai', text: data.response };
+      const aiMessage: Message = { id: `ai-${messages.length}`, sender: 'ai', text: data.response };
       setMessages((prevMessages) => [...prevMessages, aiMessage]);
     } catch (error) {
       console.error('Error sending message:', error);
-      const errorMessage: Message = { sender: 'ai', text: 'Sorry, I am having trouble connecting right now.' };
+      const errorMessage: Message = { id: `error-${messages.length}`, sender: 'ai', text: 'Sorry, I am having trouble connecting right now.' };
       setMessages((prevMessages) => [...prevMessages, errorMessage]);
+    }
+  };
+
+  const handleFeedback = async (messageId: string, rating: 'POSITIVE' | 'NEGATIVE') => {
+    try {
+      // NOTE: This feedback will not be persisted in the database until the analytics schema migration is applied.
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/analytics/feedback`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          conversationId,
+          messageId,
+          rating,
+          platform: 'web_widget',
+        }),
+      });
+      // Optionally, provide visual feedback to the user that feedback was recorded
+    } catch (error) {
+      console.error('Error submitting feedback:', error);
     }
   };
 
@@ -83,7 +106,7 @@ export default function WebWidget() {
               <div className="space-y-4">
                 {messages.map((msg, index) => (
                   <div
-                    key={index}
+                    key={msg.id}
                     className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
                   >
                     <div
@@ -93,6 +116,16 @@ export default function WebWidget() {
                       }`}
                     >
                       {msg.text}
+                      {msg.sender === 'ai' && (
+                        <div className="flex gap-1 mt-1">
+                          <Button variant="ghost" size="icon" onClick={() => handleFeedback(msg.id, 'POSITIVE')}>
+                            <ThumbsUp className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => handleFeedback(msg.id, 'NEGATIVE')}>
+                            <ThumbsDown className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}

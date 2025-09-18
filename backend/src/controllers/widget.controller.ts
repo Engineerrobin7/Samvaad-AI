@@ -1,6 +1,7 @@
 // src/controllers/widget.controller.ts
 import { Request, Response } from 'express';
 import { aiService } from '../services/ai.service';
+import { analyticsService } from '../services/analytics.service';
 
 class WidgetController {
   /**
@@ -14,8 +15,13 @@ class WidgetController {
     }
 
     try {
-      const response = await aiService.chatWithAI({ conversationId, language }, [{ role: 'user', content: message }]);
-      res.json({ response });
+      const aiResponse = await aiService.chatWithAI({ conversationId, language }, [{ role: 'user', content: message }]);
+      
+      // Log the conversation
+      // userProfileId is null for widget as it's not authenticated via Clerk
+      await analyticsService.logConversation(null, conversationId, 'web_widget', message, aiResponse);
+
+      res.json({ response: aiResponse });
     } catch (error) {
       console.error('Widget chat error:', error);
       res.status(500).json({ error: 'Failed to process chat message.' });

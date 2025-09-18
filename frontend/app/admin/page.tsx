@@ -71,9 +71,9 @@ import { ThemeToggle } from '@/components/theme-toggle';
 import { useAuth } from '@/providers/auth-provider';
 import FaqManagement from '@/components/admin/faq-management';
 import TicketManagement from '@/components/admin/ticket-management';
+import AnalyticsDashboard from '@/components/admin/analytics-dashboard';
 
 // Dummy components for now
-const DashboardStats = () => <div>Dashboard Stats</div>;
 const ConversationLogs = () => <div>Conversation Logs</div>;
 
 export default function AdminPage() {
@@ -125,7 +125,7 @@ export default function AdminPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="col-span-1 lg:col-span-3">
-            <DashboardStats />
+            <AnalyticsDashboard />
           </div>
 
           <div className="col-span-1 lg:col-span-2 bg-card p-6 rounded-lg shadow">
