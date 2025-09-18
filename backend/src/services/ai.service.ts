@@ -293,20 +293,62 @@ Remember: You are designed to bridge cultural and linguistic gaps in India.`;
   getActiveConversationCount(): number {
     return this.conversationStore.size;
   }
+
+  /**
+   * Get system prompt for campus-specific intent analysis
+   */
+  private getCampusIntentPrompt(message: string): string {
+    return `You are an AI expert at analyzing student queries for a campus chatbot. Your task is to identify the user's intent and extract relevant entities from their message.
+
+    The possible intents are:
+    - "fee_payment": Questions about paying fees, deadlines, payment methods.
+    - "exam_schedule": Queries about exam dates, timetables, locations.
+    - "admission_query": Questions about admission process, eligibility, required documents.
+    - "course_information": Queries about specific courses, syllabus, credits.
+    - "library_query": Questions about library timings, book availability, fines.
+    - "hostel_information": Queries about hostel accommodation, rules, availability.
+    - "document_request": Requests for official documents like transcripts, bonafide certificates.
+    - "faculty_contact": Asking for contact information of a professor or department.
+    - "event_information": Questions about campus events, dates, locations.
+    - "human_escalation": When the user explicitly asks to speak to a human or is frustrated.
+    - "greeting": A simple greeting.
+    - "goodbye": A simple goodbye.
+    - "none": If the intent is unclear or not related to campus services.
+
+    Extract entities relevant to the intent. For example:
+    - For "fee_payment", entities could be { "fee_type": "tuition", "semester": "fall" }.
+    - For "course_information", entities could be { "course_name": "Computer Science 101" }.
+    - For "document_request", entities could be { "document_type": "transcript" }.
+
+    Analyze the following message:
+    Message: "${message}"
+
+    Respond with a single, valid JSON object with two keys: "intent" (string) and "entities" (object). Do not include any other text, explanations, or markdown.
+    `;
+  }
+
+  /**
+   * Analyze intent and entities from message
+   */
+  async analyzeIntentAndEntities(message: string): Promise<{ intent: string; entities: any }> {
+    const model = this.genAI.getGenerativeModel({ model: "gemini-pro" });
+    const prompt = this.getCampusIntentPrompt(message);
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    try {
+      // Clean the response - remove any markdown code blocks or extra whitespace
+      const cleanResponse = response.text()
+        .replace(/```json/g, '')
+        .replace(/```/g, '')
+        .trim();
+      return JSON.parse(cleanResponse);
+    } catch (err) {
+      console.error("Failed to parse intent from AI response:", err);
+      console.error("Raw intent response:", response.text());
+      return { intent: "none", entities: {} };
+    }
+  }
 }
 
 // Create and export singleton instance
 export const aiService = new AIService();
-
-async analyzeIntentAndEntities(message: string): Promise<{ intent: string; entities: any }> {
-  // Use your AI model to analyze the message
-  const model = this.genAI.getGenerativeModel({ model: "gemini-pro" });
-  const prompt = `Analyze the following message for actionable intent (e.g., meeting, reminder, file request) and extract relevant entities.\nMessage: "${message}"\nRespond with a JSON object: { intent: string, entities: object }.`;
-  const result = await model.generateContent(prompt);
-  const response = await result.response;
-  try {
-    return JSON.parse(response.text().replace(/```json|```/g, "").trim());
-  } catch (err) {
-    return { intent: "none", entities: {} };
-  }
-}

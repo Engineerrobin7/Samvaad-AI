@@ -1,46 +1,57 @@
-import { Request, Response } from "express";
-import fs from "fs";
-import pdfParse from "pdf-parse";
+// src/controllers/pdf.controller.ts
+import { Request, Response } from 'express';
+import { documentService } from '../services/document.service';
+import { aiService } from '../services/ai.service';
 
-// In-memory store for PDF text per user/session (for demo)
-const pdfStore: Record<string, string> = {};
-
-export const uploadPDF = async (req: Request, res: Response) => {
-  try {
+class PdfController {
+  /**
+   * Handle PDF upload and processing
+   */
+  async uploadPdf(req: Request, res: Response) {
     if (!req.file) {
-      return res.status(400).json({ error: "No file uploaded" });
+      return res.status(400).json({ error: 'No file uploaded.' });
     }
-    const userId = req.user?.id || "demo";
-    const dataBuffer = fs.readFileSync(req.file.path);
-    const data = await pdfParse(dataBuffer);
-    pdfStore[userId] = data.text;
-    fs.unlinkSync(req.file.path); // Clean up uploaded file
-    return res.json({ message: "PDF uploaded and parsed." });
-  } catch (error) {
-    return res.status(500).json({ error: "Failed to parse PDF." });
-  }
-};
 
-export const chatWithPDF = async (req: Request, res: Response) => {
-  try {
-    const userId = req.user?.id || "demo";
-    const pdfText = pdfStore[userId];
-    if (!pdfText) {
-      return res.status(400).json({ error: "No PDF uploaded for this session." });
+    try {
+      const documentName = req.body.name || req.file.originalname;
+      const document = await documentService.processPdf(req.file.path, documentName);
+      res.status(201).json({ message: 'PDF processed successfully', document });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Failed to process PDF.' });
     }
-    const { message } = req.body;
-    // Simple keyword search for demo
-    const found = pdfText.toLowerCase().includes(message.toLowerCase());
-    let reply = found
-      ? `Yes, your query was found in the PDF.`
-      : `No, your query was not found in the PDF.`;
-    // Optionally, return a snippet
-    if (found) {
-      const idx = pdfText.toLowerCase().indexOf(message.toLowerCase());
-      reply += "\nSnippet: " + pdfText.substring(idx, idx + 200);
-    }
-    return res.json({ reply });
-  } catch (error) {
-    return res.status(500).json({ error: "Failed to chat with PDF." });
   }
-};
+
+  /**
+   * Handle chat with PDF context
+   */
+  async chatWithPdf(req: Request, res: Response) {
+    const { question, language = 'en' } = req.body;
+
+    if (!question) {
+      return res.status(400).json({ error: 'Question is required.' });
+    }
+
+    try {
+      // 1. Search for relevant document chunks
+      const contextChunks = await documentService.search(question);
+
+      if (contextChunks.length === 0) {
+        return res.json({ answer: "I couldn't find any relevant information in the documents." });
+      }
+
+      // 2. Combine the context
+      const context = contextChunks.map(chunk => chunk.content).join('\n---\n');
+
+      // 3. Ask the AI to generate a response based on the context
+      const answer = await aiService.chatWithPdf(question, context, language);
+
+      res.json({ answer, context: contextChunks });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Failed to chat with PDF.' });
+    }
+  }
+}
+
+export const pdfController = new PdfController();

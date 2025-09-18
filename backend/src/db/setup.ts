@@ -3,16 +3,17 @@ import fs from 'fs';
 import path from 'path';
 import { Pool } from 'pg';
 import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 
-dotenv.config();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
 async function setupDatabase() {
   const pool = new Pool({
-    host: process.env.DB_HOST || 'localhost',
-    port: parseInt(process.env.DB_PORT || '5432'),
-    database: process.env.DB_NAME || 'samvaad_ai',
-    user: process.env.DB_USER || 'postgres',
-    password: process.env.DB_PASSWORD || 'postgres',
+    connectionString: process.env.DATABASE_URL,
   });
 
   try {
@@ -108,13 +109,13 @@ async function insertDemoData(pool: Pool) {
   await pool.query(`
     INSERT INTO chat_participants (room_id, user_id)
     VALUES 
-      ('room-1', 1),
-      ('room-1', 2),
-      ('room-2', 1),
-      ('room-2', 3),
-      ('room-3', 1),
-      ('room-3', 2),
-      ('room-3', 3)
+      ((SELECT id FROM chat_rooms WHERE name = 'Hindi Learning Group'), (SELECT id FROM users WHERE email = 'demo@samvaad.ai')),
+      ((SELECT id FROM chat_rooms WHERE name = 'Hindi Learning Group'), (SELECT id FROM users WHERE email = 'hindi@samvaad.ai')),
+      ((SELECT id FROM chat_rooms WHERE name = 'Bengali Cultural Exchange'), (SELECT id FROM users WHERE email = 'demo@samvaad.ai')),
+      ((SELECT id FROM chat_rooms WHERE name = 'Bengali Cultural Exchange'), (SELECT id FROM users WHERE email = 'bengali@samvaad.ai')),
+      ((SELECT id FROM chat_rooms WHERE name = 'Multi-language Practice'), (SELECT id FROM users WHERE email = 'demo@samvaad.ai')),
+      ((SELECT id FROM chat_rooms WHERE name = 'Multi-language Practice'), (SELECT id FROM users WHERE email = 'hindi@samvaad.ai')),
+      ((SELECT id FROM chat_rooms WHERE name = 'Multi-language Practice'), (SELECT id FROM users WHERE email = 'bengali@samvaad.ai'))
     ON CONFLICT (room_id, user_id) DO NOTHING;
   `);
 
@@ -122,10 +123,10 @@ async function insertDemoData(pool: Pool) {
   await pool.query(`
     INSERT INTO chat_messages (room_id, user_id, content, original_language)
     VALUES 
-      ('room-1', 1, 'Hello everyone! I am learning Hindi.', 'en'),
-      ('room-1', 2, 'नमस्ते! मैं आपकी मदद कर सकता हूँ।', 'hi'),
-      ('room-2', 1, 'I would like to learn about Bengali festivals.', 'en'),
-      ('room-2', 3, 'শুভেচ্ছা! আমি আপনাকে বাংলা উৎসব সম্পর্কে শেখাতে পারি।', 'bn')
+      ((SELECT id FROM chat_rooms WHERE name = 'Hindi Learning Group'), (SELECT id FROM users WHERE email = 'demo@samvaad.ai'), 'Hello everyone! I am learning Hindi.', 'en'),
+      ((SELECT id FROM chat_rooms WHERE name = 'Hindi Learning Group'), (SELECT id FROM users WHERE email = 'hindi@samvaad.ai'), 'नमस्ते! मैं आपकी मदद कर सकता हूँ।', 'hi'),
+      ((SELECT id FROM chat_rooms WHERE name = 'Bengali Cultural Exchange'), (SELECT id FROM users WHERE email = 'demo@samvaad.ai'), 'I would like to learn about Bengali festivals.', 'en'),
+      ((SELECT id FROM chat_rooms WHERE name = 'Bengali Cultural Exchange'), (SELECT id FROM users WHERE email = 'bengali@samvaad.ai'), 'শুভেচ্ছা! আমি আপনাকে বাংলা উৎসব সম্পর্কে শেখাতে পারি।', 'bn')
     ON CONFLICT DO NOTHING;
   `);
 
@@ -133,10 +134,10 @@ async function insertDemoData(pool: Pool) {
   await pool.query(`
     INSERT INTO user_course_progress (user_id, course_id, progress_percentage, is_completed)
     VALUES 
-      (1, 1, 75.00, false),
-      (1, 4, 100.00, true),
-      (2, 1, 25.00, false),
-      (3, 4, 50.00, false)
+      ((SELECT id FROM users WHERE email = 'demo@samvaad.ai'), 1, 75.00, false),
+      ((SELECT id FROM users WHERE email = 'demo@samvaad.ai'), 4, 100.00, true),
+      ((SELECT id FROM users WHERE email = 'hindi@samvaad.ai'), 1, 25.00, false),
+      ((SELECT id FROM users WHERE email = 'bengali@samvaad.ai'), 4, 50.00, false)
     ON CONFLICT (user_id, course_id) DO NOTHING;
   `);
 
@@ -144,10 +145,10 @@ async function insertDemoData(pool: Pool) {
   await pool.query(`
     INSERT INTO user_lesson_progress (user_id, lesson_id, is_completed, score, completed_at)
     VALUES 
-      (1, 1, true, 95, NOW() - INTERVAL '2 days'),
-      (1, 2, true, 88, NOW() - INTERVAL '1 day'),
-      (1, 3, true, 92, NOW() - INTERVAL '6 hours'),
-      (2, 1, true, 85, NOW() - INTERVAL '3 days')
+      ((SELECT id FROM users WHERE email = 'demo@samvaad.ai'), 1, true, 95, NOW() - INTERVAL '2 days'),
+      ((SELECT id FROM users WHERE email = 'demo@samvaad.ai'), 2, true, 88, NOW() - INTERVAL '1 day'),
+      ((SELECT id FROM users WHERE email = 'demo@samvaad.ai'), 3, true, 92, NOW() - INTERVAL '6 hours'),
+      ((SELECT id FROM users WHERE email = 'hindi@samvaad.ai'), 1, true, 85, NOW() - INTERVAL '3 days')
     ON CONFLICT (user_id, lesson_id) DO NOTHING;
   `);
 
@@ -155,10 +156,10 @@ async function insertDemoData(pool: Pool) {
   await pool.query(`
     INSERT INTO language_proficiency (user_id, language_code, proficiency_level, experience_points)
     VALUES 
-      (1, 'hi', 2, 150),
-      (1, 'bn', 1, 50),
-      (2, 'en', 3, 200),
-      (3, 'en', 2, 120)
+      ((SELECT id FROM users WHERE email = 'demo@samvaad.ai'), 'hi', 2, 150),
+      ((SELECT id FROM users WHERE email = 'demo@samvaad.ai'), 'bn', 1, 50),
+      ((SELECT id FROM users WHERE email = 'hindi@samvaad.ai'), 'en', 3, 200),
+      ((SELECT id FROM users WHERE email = 'bengali@samvaad.ai'), 'en', 2, 120)
     ON CONFLICT (user_id, language_code) DO NOTHING;
   `);
 

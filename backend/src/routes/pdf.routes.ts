@@ -1,12 +1,15 @@
-import express from "express";
-import { uploadPDF, chatWithPDF } from "../controllers/pdf.controller";
-import { authenticate } from "../middleware/auth.middleware";
-import multer from "multer";
+// src/routes/pdf.routes.ts
+import { Router } from 'express';
+import multer from 'multer';
+import { pdfController } from '../controllers/pdf.controller';
 
-const upload = multer({ dest: "uploads/" });
-const router = express.Router();
+const router = Router();
 
-router.post("/upload", authenticate, upload.single("file"), uploadPDF);
-router.post("/chat", authenticate, chatWithPDF);
+// Configure multer for file uploads
+const upload = multer({ dest: 'uploads/faq/' });
+
+// Define PDF routes
+router.post('/upload', upload.single('file'), pdfController.uploadPdf);
+router.post('/chat', pdfController.chatWithPdf);
 
 export default router;

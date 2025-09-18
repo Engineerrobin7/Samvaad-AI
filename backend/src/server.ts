@@ -6,6 +6,11 @@ import translateRouter from './routes/translate.routes';
 import tipsRouter from './routes/tips.routes';
 import aiRouter from './routes/ai.routes';
 import assistanceRouter from './routes/assistance.routes';
+import pdfRouter from './routes/pdf.routes';
+import ticketRouter from './routes/ticket.routes';
+import widgetRouter from './routes/widget.routes';
+import whatsappRouter from './routes/whatsapp.routes';
+import telegramRouter from './routes/telegram.routes';
 
 import fileUpload from 'express-fileupload';
 const server = express();
@@ -24,5 +29,10 @@ server.use('/api/translate', translateRouter);
 server.use('/api/tips', tipsRouter);
 server.use('/api/ai', aiRouter);
 server.use('/api/assistance', assistanceRouter);
+server.use('/api/pdf', pdfRouter);
+server.use('/api/tickets', ticketRouter);
+server.use('/api/widget', widgetRouter);
+server.use('/api/whatsapp', whatsappRouter);
+server.use('/api/telegram', telegramRouter);
 
 export default server;

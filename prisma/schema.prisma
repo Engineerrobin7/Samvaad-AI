@@ -7,7 +7,7 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-  schemas  = ["auth", "public"]
+  schemas  = ["public"]
 }
 
 model UserProfile {
@@ -16,6 +16,43 @@ model UserProfile {
   name                 String?
   userLessonProgresses UserLessonProgress[]
   userQuizAttempts     UserQuizAttempt[]
+  tickets              Ticket[]
+  conversationLogs     ConversationLog[]
+  feedbacks            Feedback[]
+
+  @@schema("public")
+}
+
+model ConversationLog {
+  id             String      @id @default(cuid())
+  userProfileId  String?
+  userProfile    UserProfile? @relation(fields: [userProfileId], references: [id])
+  conversationId String
+  platform       String // e.g., 'web', 'whatsapp', 'telegram'
+  userMessage    String
+  aiResponse     String
+  timestamp      DateTime    @default(now())
+
+  @@schema("public")
+}
+
+enum FeedbackRating {
+  POSITIVE
+  NEGATIVE
+  NEUTRAL
+
+  @@schema("public")
+}
+
+model Feedback {
+  id            String        @id @default(cuid())
+  userProfileId String?
+  userProfile   UserProfile?   @relation(fields: [userProfileId], references: [id])
+  conversationId String?
+  messageId      String?
+  rating         FeedbackRating
+  comment        String?
+  timestamp      DateTime      @default(now())
 
   @@schema("public")
 }
@@ -113,6 +150,38 @@ model DocumentChunk {
   documentId String
   document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
   createdAt  DateTime @default(now())
+
+  @@schema("public")
+}
+
+model Faq {
+  id        String   @id @default(cuid())
+  question  String
+  answer    String
+  category  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@schema("public")
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  CLOSED
+
+  @@schema("public")
+}
+
+model Ticket {
+  id          String       @id @default(cuid())
+  userProfileId String
+  userProfile UserProfile  @relation(fields: [userProfileId], references: [id])
+  subject     String
+  description String
+  status      TicketStatus @default(OPEN)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
 
   @@schema("public")
 }
