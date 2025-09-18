@@ -52,6 +52,7 @@ model Feedback {
   messageId      String?
   rating         FeedbackRating
   comment        String?
+  variant        String? // New field for A/B testing
   timestamp      DateTime      @default(now())
 
   @@schema("public")
@@ -180,6 +181,7 @@ model Ticket {
   subject     String
   description String
   status      TicketStatus @default(OPEN)
+  assignedToUserProfileId String?
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
 

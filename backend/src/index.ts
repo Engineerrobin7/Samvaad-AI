@@ -29,7 +29,7 @@ config();
 // Initialize Express app
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, {
+export const io = new Server(server, {
   cors: {
     origin: '*', // Temporarily allow all origins for debugging
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
@@ -151,6 +151,10 @@ const startServer = async () => {
       console.log(`   Database: ✅ Connected`);
       console.log(`   File Uploads: ✅ Enabled`);
       console.log(`   Socket.IO: ✅ Enabled`);
+      // Schedule ticket escalation check
+      setInterval(() => {
+        ticketService.checkAndEscalateTickets();
+      }, 5 * 60 * 1000); // Check every 5 minutes
     });
   } catch (error) {
     console.error('❌ Failed to start server:', error);

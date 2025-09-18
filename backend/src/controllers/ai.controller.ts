@@ -175,8 +175,17 @@ export const translateImage = async (req: Request, res: Response) => {
 };
 
 export const chatWithAI = async (req: Request, res: Response) => {
-  // Implement AI chat logic here
-  res.json({ success: true, reply: "AI reply" });
+  try {
+    const { messages, language, conversationId } = req.body;
+    if (!messages || !language || !conversationId) {
+      return res.status(400).json({ success: false, message: 'Messages, language, and conversationId are required.' });
+    }
+    const { reply, variant } = await aiService.chatWithAI({ language, conversationId }, messages);
+    res.json({ success: true, reply, variant });
+  } catch (error) {
+    console.error('Chat with AI error:', error);
+    res.status(500).json({ success: false, message: 'Failed to get AI reply.' });
+  }
 };
 
 // Remove this duplicate clearChat export

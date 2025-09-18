@@ -1,4 +1,4 @@
-export async function chatWithAI(messages: {role: string, content: string}[], language: string) {
+export async function chatWithAI(messages: {role: string, content: string}[], language: string): Promise<{ reply: string; variant: string }> {
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/ai/chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

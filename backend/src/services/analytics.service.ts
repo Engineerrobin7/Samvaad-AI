@@ -39,7 +39,8 @@ class AnalyticsService {
     conversationId: string | null,
     messageId: string | null,
     rating: FeedbackRating,
-    comment: string | null
+    comment: string | null,
+    variant: string | null // Add variant parameter
   ) {
     try {
       // NOTE: This will only work once the database schema is updated with the Feedback model.
@@ -51,6 +52,7 @@ class AnalyticsService {
           messageId,
           rating,
           comment,
+          variant, // Store variant
         },
       });
     } catch (error) {

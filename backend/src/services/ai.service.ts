@@ -69,9 +69,11 @@ Return only the JSON object with no additional text or formatting.`;
   /**
    * Get A/B test chat prompt
    */
-  private getABTestChatPrompt(language: string, conversationId: string): string {
+  private getABTestChatPrompt(language: string, conversationId: string): { prompt: string; variant: string } {
     const prompts = [
-      `You are Samvaad AI, a helpful and culturally-aware multilingual assistant. Your primary goal is to facilitate clear and respectful communication across Indian cultures.
+      {
+        variant: 'Version A',
+        prompt: `You are Samvaad AI, a helpful and culturally-aware multilingual assistant. Your primary goal is to facilitate clear and respectful communication across Indian cultures.
 
 Key guidelines:
 - Respond in ${language} when the user speaks in ${language}
@@ -81,13 +83,17 @@ Key guidelines:
 - If asked about something you cannot help with, politely explain your limitations
 
 Remember: You are designed to bridge cultural and linguistic gaps in India. (Version A)`,
-      `You are Samvaad AI, a direct and efficient multilingual assistant for campus queries. Focus on providing precise answers quickly.
+      },
+      {
+        variant: 'Version B',
+        prompt: `You are Samvaad AI, a direct and efficient multilingual assistant for campus queries. Focus on providing precise answers quickly.
 
 Key guidelines:
 - Respond in ${language} when the user speaks in ${language}
 - Be direct and to the point.
 - Prioritize factual information over conversational filler.
 - If asked about something you cannot help with, state it clearly. (Version B)`,
+      },
     ];
 
     // Simple A/B test: assign based on the last character of conversationId
@@ -227,22 +233,30 @@ Text to translate: "${text}"`;
   /**
    * Start or continue chat conversation
    */
-  async chatWithAI(config: ChatConfig, messages: Array<{ role: string; content: string }>): Promise<string> {
+  async chatWithAI(config: ChatConfig, messages: Array<{ role: string; content: string }>): Promise<{ reply: string; variant: string }> {
     try {
       const { language, conversationId, systemPrompt } = config;
       
       let chat = this.conversationStore.get(conversationId);
+      let selectedVariant: string = 'default';
       
       if (!chat) {
         const model = this.genAI.getGenerativeModel({ model: "gemini-pro" });
-        // Use provided systemPrompt or determine via A/B test
-        const prompt = systemPrompt || this.getABTestChatPrompt(language, conversationId);
+        
+        let promptToUse: string;
+        if (systemPrompt) {
+          promptToUse = systemPrompt;
+        } else {
+          const { prompt, variant } = this.getABTestChatPrompt(language, conversationId);
+          promptToUse = prompt;
+          selectedVariant = variant;
+        }
         
         chat = model.startChat({
           history: [
             {
               role: "user",
-              parts: [{ text: prompt }],
+              parts: [{ text: promptToUse }],
             },
             {
               role: "model",
@@ -262,7 +276,7 @@ Text to translate: "${text}"`;
       const result = await chat.sendMessage(lastMessage.content);
       const response = await result.response;
       
-      return response.text();
+      return { reply: response.text(), variant: selectedVariant };
     } catch (error) {
       console.error('Chat error:', error);
       throw new Error('Chat service failed');

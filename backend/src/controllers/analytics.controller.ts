@@ -43,6 +43,20 @@ class AnalyticsController {
       res.status(500).json({ error: 'Failed to retrieve usage statistics.' });
     }
   }
+
+  /**
+   * Record feedback
+   */
+  async recordFeedback(req: Request, res: Response) {
+    try {
+      const { userProfileId, conversationId, messageId, rating, comment } = req.body;
+      await analyticsService.recordFeedback(userProfileId, conversationId, messageId, rating, comment);
+      res.status(201).json({ message: 'Feedback recorded successfully.' });
+    } catch (error) {
+      console.error('Error recording feedback:', error);
+      res.status(500).json({ error: 'Failed to record feedback.' });
+    }
+  }
 }
 
 export const analyticsController = new AnalyticsController();

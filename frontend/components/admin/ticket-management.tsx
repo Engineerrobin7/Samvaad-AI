@@ -47,7 +47,29 @@ export default function TicketManagement() {
 
   useEffect(() => {
     fetchTickets();
+    // Request notification permission
+    if (typeof window !== 'undefined' && Notification.permission !== 'granted') {
+      Notification.requestPermission();
+    }
   }, [token]);
+
+  useEffect(() => {
+    const socket = io(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000');
+
+    socket.on('new_ticket', (newTicket: Ticket) => {
+      setTickets((prevTickets) => [newTicket, ...prevTickets]);
+      // Add a simple browser notification
+      if (Notification.permission === 'granted') {
+        new Notification('New Ticket Received', {
+          body: newTicket.subject,
+        });
+      }
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
 
   const handleStatusChange = async (ticketId: string, newStatus: Ticket['status']) => {
     try {
