@@ -1,5 +1,5 @@
 // src/services/ticket.service.ts
-import { PrismaClient, TicketStatus } from '../../generated/prisma';
+import { PrismaClient, TicketStatus } from '../../../generated/prisma';
 import { io } from '../index';
 import { aiService } from './ai.service';
 

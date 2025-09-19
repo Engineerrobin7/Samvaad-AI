@@ -1,9 +1,7 @@
 // src/controllers/pdf.controller.ts
 import { Request, Response } from 'express';
 import { documentService } from '../services/document.service';
-import { aiService } from '../services/ai.service';
 import { analyticsService } from '../services/analytics.service';
-
 class PdfController {
   /**
    * Handle PDF upload and processing
@@ -45,8 +43,9 @@ class PdfController {
         const context = contextChunks.map(chunk => chunk.content).join('\n---\n');
 
         // 3. Ask the AI to generate a response based on the context
+        const { aiService } = require('../services/ai.service');
         answer = await aiService.chatWithPdf(question, context, language);
-      }
+      } 
 
       // Log the conversation
       // userProfileId is null for PDF chat as it might not be authenticated via Clerk

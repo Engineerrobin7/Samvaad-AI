@@ -1,5 +1,6 @@
 import express from 'express';
-import { translateText, translateImage, chatWithAI, clearChat, upload, uploadPdf, chatWithPdf, uploadPdfHandler } from '../controllers/ai.controller';
+import { translateText, translateImage, chatWithAI, clearChat, upload, uploadPdf, chatWithPdf, uploadPdfHandler, uploadTranscript, analyzeTranscriptHandler } from '../controllers/ai.controller';
+
 import { authenticate } from '../middleware/auth.middleware';
 
 const router = express.Router();
@@ -30,5 +31,8 @@ router.delete('/chat/:conversationId', authenticate, clearChat);
 // Chat with PDF routes
 router.post('/upload-pdf', authenticate, uploadPdf.single('pdf'), uploadPdfHandler);
 router.post('/chat-with-pdf', authenticate, chatWithPdf);
+
+// Transcript Analysis route
+router.post('/analyze-transcript', authenticate, uploadTranscript.single('transcript'), analyzeTranscriptHandler);
 
 export default router;

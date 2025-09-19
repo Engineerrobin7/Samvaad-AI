@@ -1,5 +1,5 @@
 // src/services/analytics.service.ts
-import { PrismaClient, FeedbackRating } from '../../generated/prisma';
+import { PrismaClient, FeedbackRating } from '../../../generated/prisma';
 
 const prisma = new PrismaClient();
 

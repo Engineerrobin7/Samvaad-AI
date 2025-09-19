@@ -19,6 +19,7 @@ model UserProfile {
   tickets              Ticket[]
   conversationLogs     ConversationLog[]
   feedbacks            Feedback[]
+  analysisSessions     AnalysisSession[]
 
   @@schema("public")
 }
@@ -184,6 +185,20 @@ model Ticket {
   assignedToUserProfileId String?
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
+
+  @@schema("public")
+}
+
+model AnalysisSession {
+  id              String   @id @default(cuid())
+  title           String
+  summary         String   @db.Text
+  actionItems     Json
+  originalContent String   @db.Text
+  userProfileId   String
+  userProfile     UserProfile @relation(fields: [userProfileId], references: [id])
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   @@schema("public")
 }

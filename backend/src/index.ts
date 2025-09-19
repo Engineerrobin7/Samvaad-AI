@@ -1,9 +1,12 @@
 // src/index.ts
+// src/index.ts
+import { config } from 'dotenv'; // Load environment variables first
+config();
+
 import express, { Request, Response, NextFunction } from 'express';
 import * as http from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
-import { config } from 'dotenv';
 import * as path from 'path';
 import * as fs from 'fs';
 import pdfRoutes from './routes/pdf.routes';
@@ -19,12 +22,10 @@ import chatRoomRoutes from './routes/chatRoom.routes';
 
 // Import socket handlers
 import { setupSocketHandlers } from './socket';
+import { ticketService } from './services/ticket.service';
 
 // Import DB pool
 import pool from './db/pool';
-
-// Load environment variables
-config();
 
 // Initialize Express app
 const app = express();

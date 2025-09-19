@@ -67,3 +67,8 @@ jspm_packages/
 .yarn-integrity
 
 /generated/prisma
+
+# Ignore compiled JS files in src
+backend/src/**/*.js
+backend/src/**/*.js.map
+backend/src/**/*.d.ts

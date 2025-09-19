@@ -1,5 +1,5 @@
 // src/services/document.service.ts
-import { PrismaClient } from '../../generated/prisma';
+import { PrismaClient } from '../../../generated/prisma';
 import { promises as fs } from 'fs';
 import pdf from 'pdf-parse';
 import { GoogleGenerativeAI, TaskType } from '@google/generative-ai';
@@ -26,7 +26,7 @@ class DocumentService {
     const model = genAI.getGenerativeModel({ model: "embedding-001" });
     const result = await model.batchEmbedContents({
       requests: chunks.map(chunk => ({
-        content: chunk,
+        content: { role: "user", parts: [{ text: chunk }] },
         taskType: TaskType.RETRIEVAL_DOCUMENT,
         title: "Campus Document",
       })),
@@ -37,43 +37,19 @@ class DocumentService {
   /**
    * Processes an uploaded PDF, creates chunks, generates embeddings, and stores them in the database.
    */
+  /**
+   * Processes an uploaded PDF, creates chunks, generates embeddings, and stores them in the database.
+   * @disabled This function is temporarily disabled due to a Prisma/DB incompatibility with the 'vector' type.
+   */
   async processPdf(filePath: string, documentName: string): Promise<any> {
+    console.error("FATAL: The processPdf function was called, but it is temporarily disabled due to a known database schema incompatibility with the 'vector' type. To fix this, the database write logic needs to be rewritten using raw SQL.");
+    // Clean up the uploaded file to prevent it from being orphaned
     try {
-      // 1. Read and parse the PDF
-      const dataBuffer = await fs.readFile(filePath);
-      const data = await pdf(dataBuffer);
-      const pdfText = data.text;
-
-      // 2. Split text into chunks
-      const chunks = this.splitTextIntoChunks(pdfText);
-
-      // 3. Generate embeddings for each chunk
-      const embeddings = await this.getEmbeddings(chunks);
-
-      // 4. Create the document and its chunks in the database
-      const document = await prisma.document.create({
-        data: {
-          name: documentName,
-          chunks: {
-            create: chunks.map((chunk, index) => ({
-              content: chunk,
-              embedding: embeddings[index],
-            })),
-          },
-        },
-        include: {
-          chunks: true,
-        },
-      });
-
-      // 5. Clean up the uploaded file
       await fs.unlink(filePath);
-
-      return document;
-    } catch (error) {
-      console.error('Error processing PDF:', error);
-      throw new Error('Failed to process PDF.');
+    } catch (unlinkError) {
+      console.error('Failed to delete uploaded file during disabled feature call:', unlinkError);
     }
+    throw new Error("The PDF processing feature is temporarily disabled due to a database configuration issue.");
   }
 
   /**
@@ -83,7 +59,7 @@ class DocumentService {
     // 1. Generate embedding for the query
     const model = genAI.getGenerativeModel({ model: "embedding-001" });
     const result = await model.embedContent({
-      content: query,
+      content: { role: "user", parts: [{ text: query }] },
       taskType: TaskType.RETRIEVAL_QUERY,
     });
     const queryEmbedding = result.embedding.values;
@@ -100,7 +76,7 @@ class DocumentService {
       LIMIT ${topK}
     `;
 
-    return results;
+    return results as any[];
   }
 }
 

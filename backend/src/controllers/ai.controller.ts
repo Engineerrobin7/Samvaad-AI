@@ -2,7 +2,7 @@
 import { Request, Response } from 'express';
 import  pool from '../db/pool';
 import { aiService } from '../services/ai.service';
-import multer from 'multer';
+import multer from "multer";
 import path from 'path';
 import pdf from 'pdf-parse';
 import fs from 'fs';
@@ -53,6 +53,30 @@ export const uploadPdf = multer({
             cb(new Error('Invalid file type. Only PDF files are allowed.'));
         }
     }
+});
+
+// New multer config for transcripts
+const transcriptStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadPath = 'uploads/transcripts/';
+    fs.mkdirSync(uploadPath, { recursive: true }); // Ensure directory exists
+    cb(null, uploadPath);
+  },
+  filename: (req, file, cb) => {
+    cb(null, `${Date.now()}-${file.originalname}`);
+  },
+});
+
+export const uploadTranscript = multer({
+  storage: transcriptStorage,
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype === 'application/pdf' || file.mimetype === 'text/plain') {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid file type. Only PDF and TXT files are allowed.'));
+    }
+  },
 });
 
 // In-memory cache for PDF content
@@ -204,5 +228,47 @@ export const clearChat = async (req: Request, res: Response) => {
   } catch (error) {
     console.error("Clear chat error:", error);
     res.status(500).json({ success: false, message: "Failed to clear conversation" });
+  }
+};
+
+/**
+ * Analyze a meeting transcript
+ * @route POST /api/ai/analyze-transcript
+ */
+export const analyzeTranscriptHandler = async (req: Request, res: Response) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'A transcript file is required.' });
+    }
+
+    let transcriptText = '';
+    if (req.file.mimetype === 'application/pdf') {
+      const dataBuffer = fs.readFileSync(req.file.path);
+      const data = await pdf(dataBuffer);
+      transcriptText = data.text;
+    } else { // text/plain
+      transcriptText = fs.readFileSync(req.file.path, 'utf-8');
+    }
+
+    // Clean up the uploaded file asynchronously
+    fs.unlink(req.file.path, (err) => {
+      if (err) console.error(`Failed to delete transcript file: ${req.file?.path}`, err);
+    });
+
+    if (!transcriptText.trim()) {
+        return res.status(400).json({ success: false, message: 'The uploaded file is empty or contains no text.' });
+    }
+
+    const analysis = await aiService.analyzeTranscript(transcriptText);
+
+    res.json({ success: true, data: analysis });
+
+  } catch (error) {
+    console.error('Transcript analysis error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to analyze transcript.',
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
   }
 };
