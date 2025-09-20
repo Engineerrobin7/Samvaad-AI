@@ -1,4 +1,4 @@
-declare module "../controllers/chat.controller.js" {
+declare module "chat.controller.js" {
   export function getChatHistory(req: any, res: any): any;
   export function deleteMessage(req: any, res: any): any;
   export function editMessage(req: any, res: any): any;

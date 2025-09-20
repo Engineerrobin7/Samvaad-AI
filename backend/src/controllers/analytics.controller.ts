@@ -50,7 +50,7 @@ class AnalyticsController {
   async recordFeedback(req: Request, res: Response) {
     try {
       const { userProfileId, conversationId, messageId, rating, comment } = req.body;
-      await analyticsService.recordFeedback(userProfileId, conversationId, messageId, rating, comment);
+      await analyticsService.recordFeedback(userProfileId, conversationId, messageId, rating, comment, null);
       res.status(201).json({ message: 'Feedback recorded successfully.' });
     } catch (error) {
       console.error('Error recording feedback:', error);

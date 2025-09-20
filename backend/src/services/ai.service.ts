@@ -115,4 +115,49 @@ Key guidelines:
 
     Do not include any other text, explanations, or markdown formatting. Return only the JSON object.`
   }
+  // --- MISSING METHODS ---
+  
+  public async chatWithPdf(question: string, pdfText: string, language: string): Promise<string> {
+    // TODO: Implement PDF chat logic using Gemini or other LLM
+    // For now, return a mock response
+    return `Mock reply to '${question}' about PDF in ${language}.`;
+  }
+  
+  public async chatWithAI(config: ChatConfig, messages: any[]): Promise<{ reply: string; variant: string }> {
+    // TODO: Implement chat logic using Gemini or other LLM
+    // For now, return a mock response
+    const { prompt, variant } = this.getABTestChatPrompt(config.language, config.conversationId);
+    return { reply: `Mock AI reply for ${config.language} (${variant})`, variant };
+  }
+  
+  public clearConversation(conversationId: string): void {
+    // TODO: Implement clearing conversation logic
+    this.conversationStore.delete(conversationId);
+  }
+  
+  public async analyzeTranscript(transcriptText: string): Promise<TranscriptAnalysis> {
+    // TODO: Implement transcript analysis logic using Gemini or other LLM
+    // For now, return a mock analysis
+    return {
+      summary: "Mock summary of transcript.",
+      actionItems: [
+        { text: "Mock action item 1", isDone: false },
+        { text: "Mock action item 2", isDone: true }
+      ]
+    };
+  }
+  
+  /**
+   * Analyze intent and entities from a message for ticket routing and analytics
+   */
+  public async analyzeIntentAndEntities(message: string): Promise<{ intent: string; entities?: Record<string, any> }> {
+    // Use the campus intent prompt to extract intent
+    const prompt = this.getCampusIntentPrompt(message);
+    // For now, mock the response. Replace with LLM call if needed.
+    // Example: Use genAI.generateContent(prompt) and parse response
+    // Here, we simply return a dummy intent
+    return { intent: "none", entities: {} };
+  }
 }
+
+export const aiService = new AIService();

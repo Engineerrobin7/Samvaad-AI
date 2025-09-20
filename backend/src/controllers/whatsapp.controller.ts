@@ -54,7 +54,7 @@ class WhatsappController {
 
           // Log the conversation
           // userProfileId is null for WhatsApp as it's not authenticated via Clerk
-          await analyticsService.logConversation(null, from, 'whatsapp', text, aiResponse);
+          await analyticsService.logConversation(null, from, 'whatsapp', text, aiResponse.reply);
 
           // Send response back to WhatsApp
           await axios.post(

@@ -31,7 +31,7 @@ class TelegramController {
 
       // Log the conversation
       // userProfileId is null for Telegram as it's not authenticated via Clerk
-      await analyticsService.logConversation(null, chatId.toString(), 'telegram', text, aiResponse);
+      await analyticsService.logConversation(null, chatId, 'telegram', text, aiResponse.reply);
 
       // Send response back to Telegram
       await axios.post(

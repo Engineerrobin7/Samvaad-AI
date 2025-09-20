@@ -1,7 +1,8 @@
 // backend/src/controllers/voice.controller.ts
 import { Request, Response } from 'express';
 import { SpeechClient } from '@google-cloud/speech';
-import { TextToSpeechClient } from '@google-cloud/text-to-speech'; // New import
+import { protos } from '@google-cloud/speech'; // Add protos import for types
+import { TextToSpeechClient } from '@google-cloud/text-to-speech';
 import fs from 'fs';
 import path from 'path';
 
@@ -15,40 +16,37 @@ export const speechToText = async (req: Request, res: Response) => {
   }
 
   const audioFilePath = req.file.path;
-  const encoding = 'LINEAR16'; // Or 'FLAC', 'MULAW', etc. based on your audio format
-  const sampleRateHertz = 16000; // Adjust based on your audio
-  const languageCode = req.body.languageCode || 'en-US'; // e.g., 'en-US', 'es-ES'
+  const encoding: protos.google.cloud.speech.v1.RecognitionConfig.AudioEncoding = protos.google.cloud.speech.v1.RecognitionConfig.AudioEncoding.LINEAR16;
+  const sampleRateHertz = 16000;
+  const languageCode = req.body.languageCode || 'en-US';
 
   try {
-    const audio = fs.readFileSync(audioFilePath).toString('base64');
-
-    const request = {
-      audio: {
-        content: audio,
-      },
+    const audioBuffer = fs.readFileSync(audioFilePath); // Fix variable name
+    const request: protos.google.cloud.speech.v1.IRecognizeRequest = {
+      audio: { content: audioBuffer.toString('base64') },
       config: {
-        encoding: encoding,
-        sampleRateHertz: sampleRateHertz,
-        languageCode: languageCode,
+        encoding,
+        sampleRateHertz,
+        languageCode,
       },
     };
+    const responseArr = await speechClient.recognize(request);
+    const response = responseArr[0] as protos.google.cloud.speech.v1.IRecognizeResponse;
+    const transcripts = response.results
+      ?.map((result) => result.alternatives?.[0]?.transcript)
+      ?.filter(Boolean);
+    const transcription = transcripts?.join('\n') || '';
 
-    const [response] = await speechClient.recognize(request); // Use speechClient
-    const transcription = response.results
-      ?.map(result => result.alternatives?.[0]?.transcript)
-      .join('\n');
-
-    fs.unlinkSync(audioFilePath); // Clean up the uploaded file
-
+    fs.unlinkSync(audioFilePath);
     res.json({ transcription });
   } catch (error: any) {
     console.error('ERROR:', error);
-    if (fs.existsSync(audioFilePath)) { // Check if file exists before trying to delete
-      fs.unlinkSync(audioFilePath); // Clean up the uploaded file even on error
+    if (fs.existsSync(audioFilePath)) {
+      fs.unlinkSync(audioFilePath);
     }
     res.status(500).json({ message: 'Speech-to-Text failed.', error: error.message });
   }
-};
+}
 
 // New function for Text-to-Speech
 export const textToSpeech = async (req: Request, res: Response) => {

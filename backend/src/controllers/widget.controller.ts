@@ -19,7 +19,7 @@ class WidgetController {
       
       // Log the conversation
       // userProfileId is null for widget as it's not authenticated via Clerk
-      await analyticsService.logConversation(null, conversationId, 'web_widget', message, aiResponse);
+      await analyticsService.logConversation(null, conversationId, 'web_widget', message, aiResponse.reply);
 
       res.json({ response: aiResponse });
     } catch (error) {
