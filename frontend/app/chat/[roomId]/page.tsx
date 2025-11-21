@@ -43,6 +43,7 @@ export default function GroupChatPage() {
   const [roomDetails, setRoomDetails] = useState<any>(null);
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [suggestion, setSuggestion] = useState<any>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
