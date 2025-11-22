@@ -26,11 +26,20 @@ A Next.js-based AI chat and translation platform with Clerk authentication and P
 ---
 
 ## 🚀 Features
-- Chat with PDFs
-- AI-powered translation
-- Learning modules
-- Clerk authentication
-- Prisma ORM for database
+
+### Core Features
+- 🤖 AI-powered translation with cultural context (Gemini AI)
+- 💬 Real-time multilingual chat rooms
+- 📚 Comprehensive language learning system
+- 🔐 Clerk authentication
+- 🗄️ PostgreSQL database with Prisma ORM
+
+### 🆕 New Advanced Features
+- 🎤 **Voice Translation** - Speech-to-speech translation across languages
+- 😊 **Sentiment Analysis** - Emotion detection and tone adjustment
+- 📖 **Translation History** - Save, search, and favorite translations
+- 🏆 **Gamification** - XP, levels, streaks, achievements, and quizzes
+- 📄 **Multi-Document Chat** - Analyze and compare multiple PDFs simultaneously
 
 ![Chat Demo](https://raw.githubusercontent.com/yourusername/samvaad-ai/main/assets/demo.gif)
 

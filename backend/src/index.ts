@@ -19,6 +19,11 @@ import aiRoutes from './routes/ai.routes';
 import learnRoutes from './routes/learn.routes';
 import voiceRoutes from './routes/voice.routes';
 import chatRoomRoutes from './routes/chatRoom.routes';
+import sentimentRoutes from './routes/sentiment.routes';
+import historyRoutes from './routes/history.routes';
+import gamificationRoutes from './routes/gamification.routes';
+import multiDocumentRoutes from './routes/multiDocument.routes';
+import collaborationRoutes from './routes/collaboration.routes';
 
 // Import socket handlers
 import { setupSocketHandlers } from './socket';
@@ -62,6 +67,12 @@ app.use('/api/tips', tipsRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/learn', learnRoutes);
 app.use('/api/pdf', pdfRoutes);
+app.use('/api/voice', voiceRoutes);
+app.use('/api/sentiment', sentimentRoutes);
+app.use('/api/history', historyRoutes);
+app.use('/api/gamification', gamificationRoutes);
+app.use('/api/multi-document', multiDocumentRoutes);
+app.use('/api/collaboration', collaborationRoutes);
 
 // Health check endpoint
 app.get('/', (req: Request, res: Response) => {
@@ -73,15 +84,26 @@ app.get('/', (req: Request, res: Response) => {
       'Real-time multilingual chat',
       'Comprehensive language learning system',
       'Cultural and language tips',
-      'Image-to-text translation'
+      'Image-to-text translation',
+      'Voice-to-voice translation',
+      'Sentiment analysis & tone adjustment',
+      'Translation history & favorites',
+      'Multi-document chat & comparison',
+      'Gamified learning with achievements',
+      'Real-time collaboration & annotations'
     ],
     availableRoutes: [
       '/api/auth - Authentication endpoints',
       '/api/chat - Real-time chat functionality',
       '/api/tips - Cultural and language tips',
       '/api/ai - AI-powered translation and chat',
-       
       '/api/learn - Language learning system',
+      '/api/voice - Voice translation & speech services',
+      '/api/sentiment - Sentiment analysis & tone adjustment',
+      '/api/history - Translation history & favorites',
+      '/api/gamification - Learning progress & achievements',
+      '/api/multi-document - Multi-document chat & analysis',
+      '/api/collaboration - Real-time collaboration & annotations',
       '/api/health - Health status check'
     ]
   });

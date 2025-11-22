@@ -193,3 +193,55 @@ CREATE INDEX IF NOT EXISTS idx_user_course_progress_user_id ON user_course_progr
 CREATE INDEX IF NOT EXISTS idx_user_lesson_progress_user_id ON user_lesson_progress(user_id);
 CREATE INDEX IF NOT EXISTS idx_courses_language_id ON courses(language_id);
 CREATE INDEX IF NOT EXISTS idx_lessons_course_id ON lessons(course_id);
+-- Tra
+nslation history table
+CREATE TABLE IF NOT EXISTS translation_history (
+  id SERIAL PRIMARY KEY,
+  user_id VARCHAR(255) NOT NULL,
+  original_text TEXT NOT NULL,
+  translated_text TEXT NOT NULL,
+  source_language VARCHAR(10) NOT NULL,
+  target_language VARCHAR(10) NOT NULL,
+  is_favorite BOOLEAN DEFAULT false,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- User progress for gamification
+CREATE TABLE IF NOT EXISTS user_progress (
+  user_id VARCHAR(255) PRIMARY KEY,
+  level INTEGER DEFAULT 1,
+  xp INTEGER DEFAULT 0,
+  streak INTEGER DEFAULT 0,
+  last_activity_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  badges JSONB DEFAULT '[]',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Activity log for tracking user actions
+CREATE TABLE IF NOT EXISTS activity_log (
+  id SERIAL PRIMARY KEY,
+  user_id VARCHAR(255) NOT NULL,
+  activity_type VARCHAR(100) NOT NULL,
+  xp_earned INTEGER DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Quiz results
+CREATE TABLE IF NOT EXISTS quiz_results (
+  id SERIAL PRIMARY KEY,
+  user_id VARCHAR(255) NOT NULL,
+  quiz_id INTEGER NOT NULL,
+  language VARCHAR(10) NOT NULL,
+  score INTEGER NOT NULL,
+  total_questions INTEGER NOT NULL,
+  passed BOOLEAN DEFAULT false,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create indexes for new tables
+CREATE INDEX IF NOT EXISTS idx_translation_history_user_id ON translation_history(user_id);
+CREATE INDEX IF NOT EXISTS idx_translation_history_created_at ON translation_history(created_at);
+CREATE INDEX IF NOT EXISTS idx_translation_history_favorite ON translation_history(user_id, is_favorite);
+CREATE INDEX IF NOT EXISTS idx_activity_log_user_id ON activity_log(user_id);
+CREATE INDEX IF NOT EXISTS idx_quiz_results_user_id ON quiz_results(user_id);
