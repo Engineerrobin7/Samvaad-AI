@@ -245,3 +245,67 @@ CREATE INDEX IF NOT EXISTS idx_translation_history_created_at ON translation_his
 CREATE INDEX IF NOT EXISTS idx_translation_history_favorite ON translation_history(user_id, is_favorite);
 CREATE INDEX IF NOT EXISTS idx_activity_log_user_id ON activity_log(user_id);
 CREATE INDEX IF NOT EXISTS idx_quiz_results_user_id ON quiz_results(user_id);
+
+-- Collaboration workspace tables
+CREATE TABLE IF NOT EXISTS collaboration_sessions (
+  id VARCHAR(36) PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  name VARCHAR(255) NOT NULL,
+  owner_id VARCHAR(255) NOT NULL,
+  source_language VARCHAR(10) NOT NULL,
+  target_language VARCHAR(10) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS collaboration_participants (
+  session_id VARCHAR(36) REFERENCES collaboration_sessions(id) ON DELETE CASCADE,
+  user_id VARCHAR(255) NOT NULL,
+  joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (session_id, user_id)
+);
+
+CREATE TABLE IF NOT EXISTS collaboration_translations (
+  id VARCHAR(36) PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  session_id VARCHAR(36) REFERENCES collaboration_sessions(id) ON DELETE CASCADE,
+  source_text TEXT NOT NULL,
+  translated_text TEXT NOT NULL,
+  user_id VARCHAR(255) NOT NULL,
+  status VARCHAR(20) DEFAULT 'draft' CHECK (status IN ('draft', 'review', 'approved')),
+  votes INTEGER DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS collaboration_votes (
+  translation_id VARCHAR(36) REFERENCES collaboration_translations(id) ON DELETE CASCADE,
+  user_id VARCHAR(255) NOT NULL,
+  vote INTEGER CHECK (vote IN (-1, 1)),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (translation_id, user_id)
+);
+
+CREATE TABLE IF NOT EXISTS collaboration_comments (
+  id VARCHAR(36) PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  translation_id VARCHAR(36) REFERENCES collaboration_translations(id) ON DELETE CASCADE,
+  user_id VARCHAR(255) NOT NULL,
+  text TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS collaboration_annotations (
+  id VARCHAR(36) PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  translation_id VARCHAR(36) REFERENCES collaboration_translations(id) ON DELETE CASCADE,
+  user_id VARCHAR(255) NOT NULL,
+  text TEXT NOT NULL,
+  position_x INTEGER NOT NULL,
+  position_y INTEGER NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Indexes for collaboration tables
+CREATE INDEX IF NOT EXISTS idx_collaboration_sessions_owner ON collaboration_sessions(owner_id);
+CREATE INDEX IF NOT EXISTS idx_collaboration_participants_user ON collaboration_participants(user_id);
+CREATE INDEX IF NOT EXISTS idx_collaboration_translations_session ON collaboration_translations(session_id);
+CREATE INDEX IF NOT EXISTS idx_collaboration_translations_status ON collaboration_translations(status);
+CREATE INDEX IF NOT EXISTS idx_collaboration_comments_translation ON collaboration_comments(translation_id);
+CREATE INDEX IF NOT EXISTS idx_collaboration_annotations_translation ON collaboration_annotations(translation_id);
