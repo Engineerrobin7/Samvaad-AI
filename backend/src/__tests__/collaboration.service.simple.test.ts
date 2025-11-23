@@ -1,3 +1,5 @@
+import { describe, it, expect } from '@jest/globals';
+
 describe('CollaborationService - Simple Tests', () => {
   it('should pass basic test', () => {
     expect(1 + 1).toBe(2);

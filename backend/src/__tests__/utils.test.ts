@@ -1,3 +1,5 @@
+import { describe, it, expect } from '@jest/globals';
+
 // Utility function tests
 
 describe('Utility Functions', () => {

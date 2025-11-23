@@ -1,7 +1,11 @@
+import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { CollaborationService } from '../services/collaboration.service';
 
 // Mock the database pool
 jest.mock('../db/pool.js', () => ({
+  default: {
+    query: jest.fn()
+  },
   query: jest.fn()
 }));
 
