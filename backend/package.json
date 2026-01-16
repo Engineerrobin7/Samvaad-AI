@@ -2,7 +2,7 @@
   "name": "samvaad-ai-backend",
   "version": "2.0.0",
   "description": "Backend for Samvaad AI - A cultural-aware translation platform powered by Google Gemini",
-  "type": "module",
+  "type": "commonjs",
   "main": "dist/index.js",
   "scripts": {
     "start": "node dist/index.js",
@@ -18,20 +18,20 @@
     "@supabase/supabase-js": "^2.57.4",
     "@types/axios": "^0.9.36",
     "@types/express-fileupload": "^1.5.1",
-    "@types/mongoose": "^5.11.96",
     "@types/pdf-parse": "^1.1.5",
+    "@xenova/transformers": "^2.17.1",
     "axios": "^1.12.2",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.6.1",
     "express": "^4.21.2",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.18.1",
     "multer": "^1.4.5-lts.1",
     "pdf-parse": "^1.1.1",
     "pg": "^8.11.3",
     "socket.io": "^4.7.2",
-    "uuid": "^9.0.1"
+    "uuid": "^9.0.1",
+    "razorpay": "^2.7.0"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
@@ -55,8 +55,7 @@
     "gemini",
     "multilingual",
     "cultural-context",
-    "indian-languages",
-    "hackathon"
+    "indian-languages"
   ],
   "author": "Samvaad AI Team",
   "license": "MIT"

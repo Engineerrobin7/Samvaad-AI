@@ -16,7 +16,7 @@ interface ToneAdjustmentResult {
 }
 
 class SentimentService {
-  private genAI: GoogleGenerativeAI;
+  private genAI: any;
 
   constructor() {
     const apiKey = process.env.GEMINI_API_KEY;
@@ -56,7 +56,7 @@ Return only the JSON object.`;
         confidence: 0.5,
       });
 
-      return parsed;
+      return parsed as unknown as SentimentResult;
     } catch (error) {
       console.error('Sentiment analysis error:', error);
       throw new Error('Sentiment analysis failed');

@@ -1,159 +1,266 @@
-// frontend/app/dashboard/page.tsx
-"use client";
+'use client';
 
-import React, { useEffect, useState, useRef } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useSession } from "@/providers/session-provider";
-import { Upload, File, MessageSquare, Users, ArrowRight, Bot, Clock, Loader2, AlertCircle } from "lucide-react";
+import { useEffect, useState } from 'react';
+import { useUser } from '@clerk/nextjs';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
-// --- PROPS & TYPE DEFINITIONS ---
-type StatCardProps = {
-  icon: React.ElementType;
-  title: string;
-  value: number | string;
-  loading: boolean;
-};
-
-type Session = {
-  id: string;
-  type: "PDF" | "Group Chat";
-  name: string;
-  lastActivity: string;
-};
-
-// --- MOCK DATA (Replace with API calls) ---
-const useDashboardData = () => {
-  const [stats, setStats] = useState({ chats: 0, pdfs: 0, groups: 0 });
-  const [sessions, setSessions] = useState<Session[]>([]);
-  const [loading, setLoading] = useState(true);
+export default function DashboardPage() {
+  const { user, isLoaded } = useUser();
+  const router = useRouter();
+  const [stats, setStats] = useState({
+    translations: 245,
+    xp: 3450,
+    level: 8,
+    streak: 12
+  });
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setStats({ chats: 128, pdfs: 12, groups: 5 });
-      setSessions([
-        { id: "1", type: "PDF", name: "Q2 Project Planning Notes", lastActivity: "2 hours ago" },
-        { id: "2", type: "Group Chat", name: "SIH 2025 Prep Team", lastActivity: "22 hours ago" },
-      ]);
-      setLoading(false);
-    }, 1500);
-    return () => clearTimeout(timer);
-  }, []);
-
-  return { stats, sessions, loading };
-};
-
-// --- UI COMPONENTS ---
-
-const Skeleton = ({ className }: { className?: string }) => (
-  <div className={`animate-pulse rounded-md bg-gray-200 dark:bg-gray-800 ${className}`} />
-);
-
-const StatCard: React.FC<StatCardProps> = ({ icon: Icon, title, value, loading }) => (
-  <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-6 flex flex-col justify-between">
-    <div className="flex justify-between items-center mb-4">
-      <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">{title}</h3>
-      <Icon className="h-5 w-5 text-gray-400 dark:text-gray-500" />
-    </div>
-    {loading ? <Skeleton className="h-9 w-1/2" /> : <p className="text-3xl font-bold text-gray-900 dark:text-white">{value}</p>}
-  </div>
-);
-
-const RecentSessionItem: React.FC<{ session: Session }> = ({ session }) => {
-  const Icon = session.type === "PDF" ? File : Users;
-  return (
-    <Link href={`/chat/${session.id}`} className="block hover:bg-gray-50 dark:hover:bg-gray-800/50 p-4 rounded-lg transition-colors">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4"><Icon className="h-5 w-5 text-gray-500" /><span className="font-medium text-gray-800 dark:text-gray-200">{session.name}</span></div>
-        <div className="flex items-center gap-4 text-sm text-gray-500"><div className="flex items-center gap-1.5"><Clock className="h-4 w-4" /><span>{session.lastActivity}</span></div><ArrowRight className="h-4 w-4 text-gray-400" /></div>
-      </div>
-    </Link>
-  );
-};
-
-// --- MAIN DASHBOARD PAGE ---
-
-const DashboardPage = () => {
-  const { stats, sessions, loading: dashboardLoading } = useDashboardData();
-  const { startAnalysis, isLoading: isAnalyzing, error } = useSession();
-  const router = useRouter();
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const handleUploadClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      await startAnalysis(file);
-      // The session provider handles loading/error state. We can check the error state after the call.
-      // A more robust way is to have startAnalysis return a boolean.
-      // For now, we assume if no error is set, it was successful.
-      if (!error) {
-        router.push('/session/local');
-      }
+    if (isLoaded && !user) {
+      router.push('/login');
     }
-  };
+  }, [isLoaded, user, router]);
+
+  const features = [
+    {
+      title: 'Translate',
+      description: 'AI-powered translation with cultural context',
+      icon: '🌐',
+      href: '/translate',
+      color: 'from-blue-500 to-cyan-500'
+    },
+    {
+      title: 'Voice Translation',
+      description: 'Speech-to-speech translation',
+      icon: '🎤',
+      href: '/voice-translate',
+      color: 'from-purple-500 to-pink-500'
+    },
+    {
+      title: 'AI Assistant',
+      description: 'Smart suggestions and quality assessment',
+      icon: '🤖',
+      href: '/ai-assistant',
+      color: 'from-green-500 to-teal-500'
+    },
+    {
+      title: 'Collaboration',
+      description: 'Work together on translations',
+      icon: '👥',
+      href: '/collaboration',
+      color: 'from-orange-500 to-red-500'
+    },
+    {
+      title: 'RAG Chat',
+      description: 'Chat with your documents',
+      icon: '📚',
+      href: '/rag-chat',
+      color: 'from-indigo-500 to-purple-500'
+    },
+    {
+      title: 'Gamification',
+      description: 'Earn XP, badges, and level up',
+      icon: '🏆',
+      href: '/gamification',
+      color: 'from-yellow-500 to-orange-500'
+    },
+    {
+      title: 'Analytics',
+      description: 'Track your progress and insights',
+      icon: '📊',
+      href: '/analytics',
+      color: 'from-pink-500 to-rose-500'
+    },
+    {
+      title: 'Learn',
+      description: 'Structured language courses',
+      icon: '📖',
+      href: '/learn',
+      color: 'from-teal-500 to-green-500'
+    },
+    {
+      title: 'Chat Rooms',
+      description: 'Multilingual group conversations',
+      icon: '💬',
+      href: '/chat',
+      color: 'from-blue-500 to-indigo-500'
+    },
+    {
+      title: 'Sentiment Analysis',
+      description: 'Analyze and adjust tone',
+      icon: '😊',
+      href: '/sentiment-analyzer',
+      color: 'from-purple-500 to-blue-500'
+    },
+    {
+      title: 'PDF Chat',
+      description: 'Chat with PDF documents',
+      icon: '📄',
+      href: '/chat-with-pdf',
+      color: 'from-red-500 to-pink-500'
+    },
+    {
+      title: 'Pricing',
+      description: 'Upgrade to unlock more features',
+      icon: '💳',
+      href: '/payment',
+      color: 'from-green-500 to-emerald-500'
+    }
+  ];
+
+  if (!isLoaded || !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-xl">Loading...</div>
+      </div>
+    );
+  }
 
   return (
-    <main className="bg-gray-50 dark:bg-black min-h-screen p-4 sm:p-6 lg:p-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 p-8">
       <div className="max-w-7xl mx-auto">
-        {/* --- NEW ASSISTANT CARD --- */}
-        <section className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-6 mb-8">
-          <div className="flex flex-col sm:flex-row items-start justify-between">
-            <div>
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Smart Meeting Assistant</h2>
-              <p className="mt-2 text-gray-600 dark:text-gray-400 max-w-2xl">
-                Your new superpower. Upload a meeting transcript (.txt or .pdf) to automatically generate a concise summary and actionable tasks.
-              </p>
+        {/* Welcome Section */}
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold mb-2">
+            Welcome back, {user.firstName || 'User'}! 👋
+          </h1>
+          <p className="text-gray-600 text-lg">
+            Continue your language learning journey
+          </p>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-gray-600">Translations</div>
+              <div className="text-3xl">📝</div>
             </div>
-            <div className="mt-4 sm:mt-0 sm:ml-6 flex-shrink-0">
-              <button
-                onClick={handleUploadClick}
-                disabled={isAnalyzing}
-                className="w-full sm:w-auto flex items-center justify-center gap-2 bg-blue-600 text-white font-semibold px-4 py-2.5 rounded-lg shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all disabled:bg-blue-400 disabled:cursor-not-allowed"
+            <div className="text-3xl font-bold text-blue-600">{stats.translations}</div>
+            <div className="text-sm text-green-600 mt-1">↑ 12% this week</div>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-gray-600">Total XP</div>
+              <div className="text-3xl">⭐</div>
+            </div>
+            <div className="text-3xl font-bold text-purple-600">{stats.xp}</div>
+            <div className="text-sm text-gray-600 mt-1">Level {stats.level}</div>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-gray-600">Streak</div>
+              <div className="text-3xl">🔥</div>
+            </div>
+            <div className="text-3xl font-bold text-orange-600">{stats.streak} days</div>
+            <div className="text-sm text-green-600 mt-1">Keep it up!</div>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-gray-600">Rank</div>
+              <div className="text-3xl">🏅</div>
+            </div>
+            <div className="text-3xl font-bold text-green-600">#42</div>
+            <div className="text-sm text-gray-600 mt-1">Global leaderboard</div>
+          </div>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
+          <h2 className="text-2xl font-bold mb-4">⚡ Quick Actions</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <Link
+              href="/translate"
+              className="p-4 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-lg hover:shadow-md transition text-center"
+            >
+              <div className="text-3xl mb-2">🌐</div>
+              <div className="font-semibold">Translate</div>
+            </Link>
+            <Link
+              href="/ai-assistant"
+              className="p-4 bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg hover:shadow-md transition text-center"
+            >
+              <div className="text-3xl mb-2">🤖</div>
+              <div className="font-semibold">AI Assistant</div>
+            </Link>
+            <Link
+              href="/gamification"
+              className="p-4 bg-gradient-to-br from-yellow-50 to-orange-50 rounded-lg hover:shadow-md transition text-center"
+            >
+              <div className="text-3xl mb-2">🏆</div>
+              <div className="font-semibold">Gamification</div>
+            </Link>
+            <Link
+              href="/analytics"
+              className="p-4 bg-gradient-to-br from-green-50 to-teal-50 rounded-lg hover:shadow-md transition text-center"
+            >
+              <div className="text-3xl mb-2">📊</div>
+              <div className="font-semibold">Analytics</div>
+            </Link>
+          </div>
+        </div>
+
+        {/* All Features */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold mb-6">🚀 All Features</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {features.map((feature, index) => (
+              <Link
+                key={index}
+                href={feature.href}
+                className="group bg-white rounded-xl shadow-lg p-6 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1"
               >
-                {isAnalyzing ? <><Loader2 className="h-5 w-5 animate-spin" /> Analyzing...</> : <><Upload className="h-5 w-5" /> Upload Transcript</>}
-              </button>
-              <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept=".pdf,.txt" />
-            </div>
+                <div className={`w-16 h-16 rounded-xl bg-gradient-to-br ${feature.color} flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform`}>
+                  {feature.icon}
+                </div>
+                <h3 className="text-xl font-bold mb-2">{feature.title}</h3>
+                <p className="text-gray-600">{feature.description}</p>
+                <div className="mt-4 flex items-center text-blue-600 font-semibold">
+                  <span>Explore</span>
+                  <svg
+                    className="w-5 h-5 ml-2 group-hover:translate-x-2 transition-transform"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5l7 7-7 7"
+                    />
+                  </svg>
+                </div>
+              </Link>
+            ))}
           </div>
-        </section>
+        </div>
 
-        {/* --- ERROR DISPLAY --- */}
-        {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative mb-6" role="alert">
-            <strong className="font-bold"><AlertCircle className="inline-block mr-2"/>Error: </strong>
-            <span className="block sm:inline">{error}</span>
+        {/* Recent Activity */}
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          <h2 className="text-2xl font-bold mb-4">📅 Recent Activity</h2>
+          <div className="space-y-3">
+            {[
+              { action: 'Completed translation', time: '2 hours ago', icon: '✅' },
+              { action: 'Earned "Week Streak" badge', time: '5 hours ago', icon: '🏆' },
+              { action: 'Passed Hindi quiz with 95%', time: '1 day ago', icon: '🎯' },
+              { action: 'Joined collaboration session', time: '2 days ago', icon: '👥' },
+              { action: 'Uploaded document to RAG', time: '3 days ago', icon: '📚' }
+            ].map((activity, i) => (
+              <div key={i} className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg">
+                <div className="text-2xl">{activity.icon}</div>
+                <div className="flex-1">
+                  <div className="font-medium">{activity.action}</div>
+                  <div className="text-sm text-gray-600">{activity.time}</div>
+                </div>
+              </div>
+            ))}
           </div>
-        )}
-
-        {/* --- STATS --- */}
-        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          <StatCard icon={MessageSquare} title="Total Chats" value={stats.chats} loading={dashboardLoading} />
-          <StatCard icon={File} title="PDFs Analyzed" value={stats.pdfs} loading={dashboardLoading} />
-          <StatCard icon={Users} title="Group Collaborations" value={stats.groups} loading={dashboardLoading} />
-        </section>
-
-        {/* --- RECENT SESSIONS --- */}
-        <section className="mt-10">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Recent Sessions</h2>
-          <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg">
-            {dashboardLoading ? (
-              <div className="p-4 space-y-4"><Skeleton className="h-8 w-full" /><Skeleton className="h-8 w-full" /></div>
-            ) : sessions.length > 0 ? (
-              <ul className="divide-y divide-gray-200 dark:divide-gray-800">
-                {sessions.map((session) => <li key={session.id}><RecentSessionItem session={session} /></li>)}
-              </ul>
-            ) : (
-              <div className="text-center py-12"><Bot className="mx-auto h-12 w-12 text-gray-400" /><h3 className="mt-2 text-lg font-medium text-gray-900 dark:text-white">No recent sessions</h3><p className="mt-1 text-sm text-gray-500">Start a new session to see your AI-powered dialogues here.</p></div>
-            )}
-          </div>
-        </section>
+        </div>
       </div>
-    </main>
+    </div>
   );
-};
-
-export default DashboardPage;
+}

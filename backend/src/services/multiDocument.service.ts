@@ -17,7 +17,7 @@ interface ChatContext {
 }
 
 class MultiDocumentService {
-  private genAI: GoogleGenerativeAI;
+  private genAI: any;
   private contexts: Map<string, ChatContext> = new Map();
 
   constructor() {
@@ -31,7 +31,7 @@ class MultiDocumentService {
   /**
    * Extract text from PDF
    */
-  private async extractPDFText(filePath: string): Promise<string> {
+  async extractPDFText(filePath: string): Promise<string> {
     try {
       const dataBuffer = await fs.readFile(filePath);
       const data = await pdfParse(dataBuffer);
