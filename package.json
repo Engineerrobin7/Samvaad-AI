@@ -1,7 +1,7 @@
 {
   "name": "samvaad-ai",
   "version": "1.0.0",
-  "description": "A cultural-aware translation and communication platform for Smart India Hackathon 2025",
+  "description": "A cultural-aware translation and communication platform",
   "main": "index.js",
   "scripts": {
     "frontend:dev": "cd frontend && npm run dev",
@@ -14,13 +14,15 @@
   "keywords": [
     "translation",
     "cultural",
-    "ai",
-    "hackathon"
+    "ai"
   ],
-  "author": "Smart India Hackathon Team",
+  "author": "Samvaad AI Team",
   "license": "MIT",
   "devDependencies": {
+    "@types/body-parser": "^1.19.6",
+    "@types/express": "^5.0.6",
     "@types/express-fileupload": "^1.5.1",
+    "@types/mime": "^3.0.4",
     "@types/react": "^19.1.13",
     "autoprefixer": "^10.4.16",
     "concurrently": "^8.2.2",

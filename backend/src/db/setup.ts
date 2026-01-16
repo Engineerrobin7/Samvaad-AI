@@ -3,12 +3,6 @@ import fs from 'fs';
 import path from 'path';
 import { Pool } from 'pg';
 import dotenv from 'dotenv';
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
 async function setupDatabase() {
@@ -25,7 +19,7 @@ async function setupDatabase() {
     await pool.query(schemaSql);
     console.log('Database schema created successfully');
 
-    // Insert demo data for hackathon presentation
+    // Insert demo data
     await insertDemoData(pool);
     console.log('Demo data inserted successfully');
 

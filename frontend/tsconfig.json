@@ -19,6 +19,8 @@
         "name": "next"
       }
     ],
+    "typeRoots": ["./node_modules/@types", "./types"],
+    "types": ["node", "react", "react-dom"],
     "baseUrl": ".",
     "paths": {
       "@/*": ["./*"]

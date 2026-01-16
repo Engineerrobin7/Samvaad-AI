@@ -24,6 +24,9 @@ import historyRoutes from './routes/history.routes';
 import gamificationRoutes from './routes/gamification.routes';
 import multiDocumentRoutes from './routes/multiDocument.routes';
 import collaborationRoutes from './routes/collaboration.routes';
+import mlRoutes from './routes/ml.routes';
+import paymentRoutes from './routes/payment.routes';
+import ragRoutes from './routes/rag.routes';
 
 // Import socket handlers
 import { setupSocketHandlers } from './socket';
@@ -73,6 +76,9 @@ app.use('/api/history', historyRoutes);
 app.use('/api/gamification', gamificationRoutes);
 app.use('/api/multi-document', multiDocumentRoutes);
 app.use('/api/collaboration', collaborationRoutes);
+app.use('/api/ml', mlRoutes);
+app.use('/api/payments', paymentRoutes);
+app.use('/api/rag', ragRoutes);
 
 // Health check endpoint
 app.get('/', (req: Request, res: Response) => {
@@ -90,7 +96,13 @@ app.get('/', (req: Request, res: Response) => {
       'Translation history & favorites',
       'Multi-document chat & comparison',
       'Gamified learning with achievements',
-      'Real-time collaboration & annotations'
+      'Real-time collaboration & annotations',
+      'AI/ML-powered quality assessment',
+      'Smart translation suggestions',
+      'Personalized learning paths',
+      'Automated error detection',
+      'RAG (Retrieval-Augmented Generation) with vector embeddings',
+      'Razorpay payment gateway integration'
     ],
     availableRoutes: [
       '/api/auth - Authentication endpoints',
@@ -104,6 +116,8 @@ app.get('/', (req: Request, res: Response) => {
       '/api/gamification - Learning progress & achievements',
       '/api/multi-document - Multi-document chat & analysis',
       '/api/collaboration - Real-time collaboration & annotations',
+      '/api/rag - RAG and document retrieval',
+      '/api/payments - Razorpay payment processing',
       '/api/health - Health status check'
     ]
   });
@@ -117,9 +131,13 @@ app.get('/api/health', (req: Request, res: Response) => {
     environment: process.env.NODE_ENV || 'development',
     features: {
       geminiAI: !!process.env.GEMINI_API_KEY,
+      llmService: !!process.env.GEMINI_API_KEY,
+      ragSystem: !!process.env.OPENAI_API_KEY,
+      vectorEmbeddings: !!process.env.OPENAI_API_KEY,
       database: true,
       fileUploads: true,
-      socketIO: true
+      socketIO: true,
+      razorpayPayments: !!process.env.RAZORPAY_KEY_ID
     }
   });
 });
